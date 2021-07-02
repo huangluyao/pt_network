@@ -2,9 +2,9 @@
 
 PT_network is a framwrok for deep learning experiments base on pytorch， which implements the following algorithms:
 
-[YOLOF](https://arxiv.org/abs/2103.09460):You Only Look One-level Feature[(CVPR'2021)](https://github.com/open-mmlab/mmdetection/blob/master/configs/yolof/README.md)
+[YOLOF](https://arxiv.org/abs/2103.09460):You Only Look One-level Feature(CVPR'2021)
 
-[FCOS](https://arxiv.org/abs/1904.01355): Fully Convolutional One-Stage Object Detection[(ICCV'2019)](https://github.com/open-mmlab/mmdetection/blob/master/configs/fcos)
+[FCOS](https://arxiv.org/abs/1904.01355): Fully Convolutional One-Stage Object Detection(ICCV'2019)
 
 ## DataSets
 
