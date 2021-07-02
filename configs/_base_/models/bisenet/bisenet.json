@@ -1,0 +1,25 @@
+{
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "out_levels": [0, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "BiSeNetHead",
+            "in_channels": [3, 256, 512],
+            "in_index": [0, 1, 2],
+            "head_width": 64,
+            "num_classes": 32,
+            "use_spatial_path": true,
+            "num_arms": 2,
+            "final_drop": 0.0,
+            "refine_channels": 128,
+            "deep_supervision": false,
+            "aux_weight": 0.4,
+            "se_ratio": 1,
+            "align_corners": true,
+            "loss": {"type": "CrossEntropyLoss"}
+        }
+    }
+}

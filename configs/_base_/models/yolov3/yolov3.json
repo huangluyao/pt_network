@@ -1,0 +1,40 @@
+{
+    "model": {
+        "type": "YOLOV3",
+        "backbone": {
+            "out_levels": [3, 4, 5],
+            "num_classes": null
+        },
+        "neck": {
+            "type": "YOLOV3Neck",
+            "num_scales": 3,
+            "in_channels": [1024, 512, 256],
+            "out_channels": [512, 256, 128]
+        },
+        "bbox_head": {
+            "type": "YOLOV3Head",
+            "num_classes": 80,
+            "in_channels": [512, 256, 128],
+            "out_channels": [1024, 512, 256],
+            "anchor_cfg": {
+                "base_sizes": [
+                    [[116, 90], [156, 198], [373, 326]],
+                    [[30, 61], [62, 45], [59, 119]],
+                    [[10, 13], [16, 30], [33, 23]]
+                ],
+                "strides": [32, 16, 8]
+            },
+            "featmap_strides": [32, 16, 8]
+        }
+    },
+    "train_cfg": {
+        "pos_iou_thr": 0.5,
+        "neg_iou_thr": 0.5
+    },
+    "test_cfg": {
+        "topk": 200,
+        "conf_thr": 0.05,
+        "nms": null,
+        "instances_per_img": 100
+    }
+}

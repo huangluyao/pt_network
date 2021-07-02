@@ -1,0 +1,43 @@
+{
+    "_base_": "../../../_base_/models/fcos/fcos.json",
+    "pretrained": "model_zoo/pth/backbone/dsnet/dsnet.pth",
+    "model": {
+        "backbone": {
+            "type": "DSNet",
+            "depth_multiple": 0.33,
+            "width_multiple": 0.50,
+            "num_classes": null,
+            "act_cfg": {"type": "SiLU"}
+        },
+        "neck": {
+            "type":"NASFCOS_FPN",
+            "in_channels": [64,128,256,512],
+            "out_channels": 128,
+            "num_outs": 5,
+            "start_level": 1,
+            "end_level": -1,
+            "add_extra_convs": true,
+            "relu_before_extra_convs": true
+        },
+        "bbox_head": {
+            "type": "FCOSHead",
+            "num_classes": 1,
+            "in_channels": 128,
+            "feat_channels": 128,
+            "stacked_convs": 2,
+            "strides": [8,16,32,64,128]
+        },
+
+        "train_cfg":
+        {
+            "score_thr":0.3,
+            "nms":  0.3,
+            "max_per_img": 100
+        },
+        "test_cfg":
+        {
+            "score_thr":0.3
+        }
+
+    }
+}

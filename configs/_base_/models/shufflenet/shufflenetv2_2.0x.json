@@ -1,0 +1,17 @@
+{
+    "pretrained": "nas://model_zoo/pth/shufflenet/ShuffleNetV2.2.0x.pth.tar",
+    "model": {
+        "type": "ImageClassifier",
+        "backbone": {
+            "type": "ShuffleNetV2",
+            "size": "2.0x",
+            "in_channels": 3,
+            "num_classes": 1000
+        },
+        "head": {
+            "type": "ClsHead",
+            "loss": {"type": "CrossEntropyLoss", "loss_weight": 1.0},
+            "metric": {"type": "Accuracy", "topk": [1, 5]}
+        }
+    }
+}

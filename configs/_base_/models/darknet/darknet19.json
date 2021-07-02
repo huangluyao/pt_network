@@ -1,0 +1,17 @@
+{
+    "pretrained": "nas://model_zoo/pth/darknet/darknet19_448.pth",
+    "model": {
+        "type": "ImageClassifier",
+        "backbone": {
+            "type": "Darknet19",
+            "in_channels": 3,
+            "out_levels": [5],
+            "num_classes": 1000
+        },
+        "head": {
+            "type": "ClsHead",
+            "loss": {"type": "CrossEntropyLoss", "loss_weight": 1.0},
+            "metric": {"type": "Accuracy", "topk": [1, 5]}
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "_base_": "../../../_base_/models/deeplabv3/deeplabv3_s16.json",
+    "pretrained": "nas://model_zoo/pth/shufflenet/ShuffleNetV2+.Small.pth.tar",
+    "model": {
+        "backbone": {
+            "type": "ShuffleNetV2Plus",
+            "size": "Small",
+            "multi_grid": [1, 2, 2, 4],
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": 416
+        },
+        "auxiliary_head": {
+            "in_channels": 208
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+  "task": "classification",
+  "output_dir": "./export",
+  "num_gpus": 1,
+  "model": "configs/cls/models/fewshot/resnet18.json",
+  "optimizer":{
+    "type": "SGD",
+    "lr": 0.001,
+    "momentum": 0.9,
+    "weight_decay": 0.0001
+  },
+  "scheduler": {
+    "warm_up_epochs": 5,
+    "max_epochs": 100
+  },
+  "dataset": {
+    "type": "flower17",
+    "num_classes": 4,
+    "train_data_path": "/media/hly/Samsung_T5/datasets/huangluyao/detection/aokeng/images/labelme_train.txt",
+    "val_data_path": "/media/hly/Samsung_T5/datasets/huangluyao/detection/aokeng/images/labelme_val.txt"
+  },
+
+  "loader_cfg": {
+      "batch_size": 16
+    }
+}

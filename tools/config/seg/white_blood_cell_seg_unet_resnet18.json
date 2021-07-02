@@ -1,0 +1,46 @@
+{
+    "task": "segmentation",
+    "num_gpus": 1,
+    "model": "configs/seg/models/unet/unet_resnet18.json",
+    "_update_": {
+        "model": {
+            "decode_head": {
+                "num_classes": 3
+            }
+        }
+    },
+    "nas_dir": "~/nas",
+    "export_dir": "./export",
+    "visualization": true,
+    "data_cfg": {
+        "dataset_dir": "/media/hly/Samsung_T5/datasets/huangluyao/mini_datasets/white_blood_cell_seg",
+        "input_shape": {
+            "image": [128, 128, 3],
+            "masks": [128, 128]
+        },
+        "batch_size": 16,
+        "classes": ["background", "nuclei", "cytoplasms"],
+        "means": [91.172, 95.572, 113.936],
+        "stds": [90.307, 102.135, 113.075],
+        "augmentation": {
+            "flipping": "both",
+            "rotation": "rare",
+            "shearing": "moderate",
+            "scaling": "slight",
+            "translation": "slight",
+            "color_enhancement": "moderate"
+        }
+    },
+    "train_cfg": {
+        "optimizer_cfg": {
+            "type": "SGD",
+            "momentum": 0.9,
+            "weight_decay": 0.0001
+        },
+        "lr_cfg": {
+            "init_lr": 0.01,
+            "warm_up_epochs": 5,
+            "max_epochs": 100
+        }
+    }
+}

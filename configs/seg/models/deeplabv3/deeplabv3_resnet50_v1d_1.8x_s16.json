@@ -1,0 +1,17 @@
+{
+    "_base_": "../../../_base_/models/deeplabv3/deeplabv3_s16.json",
+    "pretrained": "nas://model_zoo/pth/gluoncv/resnet50_v1d_0.86.pth",
+    "model": {
+        "backbone": {
+            "type": "PrunedResNet",
+            "model_name": "resnet50_v1d_0.86",
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": 2048
+        },
+        "auxiliary_head": {
+            "in_channels": 856
+        }
+    }
+}

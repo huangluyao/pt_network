@@ -1,0 +1,10 @@
+{
+    "_base_": "./deeplabv3_s16.json",
+    "model": {
+        "decode_head": {
+            "type": "DeepLabV3PlusHead",
+            "c1_in_channels": 256,
+            "c1_channels": 48
+        }
+    }
+}
