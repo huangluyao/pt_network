@@ -31,7 +31,7 @@ class Trainer:
         self.scheduler = build_scheduler(self.optimizer, cfg['scheduler'])
 
         self.max_epochs = cfg['scheduler']['max_epochs']
-        self._device, gpu_ids = self.get_device(num_gpus=cfg['num_gpus'])
+        self._device, gpu_ids = self.get_device(gpu_id=cfg.get('gpu_id', 0))
         self.model = self.model.to(self._device)
         self.logger.info('model info:')
         self.logger.info(model_info(self.model, self.input_size))
@@ -269,18 +269,17 @@ class Trainer:
                     step_status += ' %s: %7.4f' %(key, losses[key].detach().cpu().numpy())
                 self.logger.info(step_status)
 
-    def get_device(self, num_gpus):
+    def get_device(self, gpu_id):
         gpu_count = torch.cuda.device_count()
-        if num_gpus > 0 and gpu_count == 0:
+        if gpu_id > 0 and gpu_count == 0:
             print("Warning: There\'s no GPU available on this machine, training will be performed on CPU.")
             num_gpus = 0
-        if num_gpus > gpu_count:
+        if gpu_id > gpu_count:
             print("Warning: The number of GPU\'s configured to use is {}, but only {} are available "
-                  "on this machine.".format(num_gpus, gpu_count))
-            num_gpus = gpu_count
-        device = torch.device('cuda:0' if num_gpus > 0 else 'cpu')
-        gpu_ids = list(range(num_gpus))
-        return device, gpu_ids
+                  "on this machine.".format(gpu_id, gpu_count))
+            gpu_id = gpu_count
+        device = torch.device('cuda:%d'%(gpu_id) if torch.cuda.is_available() else 'cpu')
+        return device, gpu_id
 
     def update_dateset_info(self, pipelines):
         if isinstance(pipelines, list):

@@ -15,10 +15,12 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default='tools/config/det/fcos/fcos_resnet18_voc.json',
+                        # default='tools/config/det/fcos/fcos_resnet18_caiqiebuliang.json',
+                        # default='tools/config/det/fcos/fcos_resnet18_voc.json',
                         # default='tools/config/det/fcos/fcos_resnet18_finetune.json',
                         # default='tools/config/det/yolof/yolof_resnet18_caiqiebuliang_finetune.json',
                         # default='tools/config/det/yolof/yolof_resnet18_voc.json',
+                        default="tools/config/det/fcos/fcos_dsnet_csp_apn_caiqiebuliang.json",
                         type=str)
     args = parser.parse_args()
 

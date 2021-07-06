@@ -288,9 +288,8 @@ class CIoULoss(nn.Module):
         loss = self.loss_weight * ciou_loss(
             pred,
             target,
-            weight,
-            eps=self.eps,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+            weight)
+
+        loss = weight_reduce_loss(loss, weight, reduction, avg_factor)
+
         return loss
