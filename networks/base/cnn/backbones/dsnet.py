@@ -5,7 +5,7 @@
 import torch
 import math
 import torch.nn as nn
-from ..components.blocks import Focus, C3, SPP
+from ..components.blocks import Focus, C3, SPP, C3TR
 from ..components.conv_module import ConvModule
 from .builder import BACKBONES
 
@@ -26,6 +26,7 @@ class DSNet(nn.Module):
                  depth_multiple=1,
                  width_multiple=1,
                  use_spp=True,
+                 use_transformer=False,
                  num_classes=None,
                  **kwargs
                  ):
@@ -61,7 +62,9 @@ class DSNet(nn.Module):
                                     ConvModule(input_channels, output_channels,
                                                kernel_size=3, stride=strides[i], padding=1, **kwargs),
                                     SPP(output_channels, output_channels, **kwargs),
-                                    C3(output_channels, output_channels, number=n, shortcut=False, **kwargs)))
+                                    C3(output_channels, output_channels, number=n, shortcut=False, **kwargs)
+                                    if not use_transformer else C3TR(output_channels, output_channels, number=n, shortcut=False, **kwargs)
+                                       ))
 
             else:
                 name = 'stage%d' % (i + 1)

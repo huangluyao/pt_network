@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from .base_dense_head import BaseDenseHead
 from base.cnn.components.conv_module import ConvModule
+from base.cnn.components.blocks import C3
 from ..builder import HEADS, build_loss
 from base.cnn.utils import normal_init, bias_init_with_prob
 from ..utils import multi_apply
@@ -24,7 +25,7 @@ class AnchorFreeHead(BaseDenseHead):
                                loss_weight=1.0),
                  loss_bbox=dict(type='IoULoss', loss_weight=1.0),
                  conv_cfg=None,
-                 norm_cfg=None,
+                 norm_cfg=dict(type='BN2d'),
                  train_cfg=None,
                  test_cfg=None, **kwargs):
 
@@ -55,6 +56,17 @@ class AnchorFreeHead(BaseDenseHead):
 
     def _init_cls_convs(self):
         """ stacked convs"""
+
+        # cfg = dict(norm_cfg=self.norm_cfg)
+        # self.cls_convs = C3(self.in_channels,
+        #                     self.feat_channels,
+        #                     numbers=self.stacked_convs,
+        #                     shortcut=True,
+        #                     groups=1,
+        #                     expansion=0.5,
+        #                     **cfg
+        #                     )
+
         self.cls_convs = nn.ModuleList()
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
@@ -75,6 +87,15 @@ class AnchorFreeHead(BaseDenseHead):
 
     def _init_reg_convs(self):
         """Initialize bbox regression conv layers of the head."""
+        # cfg = dict(norm_cfg=self.norm_cfg)
+        # self.reg_convs = C3(self.in_channels,
+        #                     self.feat_channels,
+        #                     numbers=self.stacked_convs,
+        #                     shortcut=True,
+        #                     groups=1,
+        #                     expansion=0.5,
+        #                     **cfg
+        #                     )
         self.reg_convs = nn.ModuleList()
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
@@ -106,6 +127,17 @@ class AnchorFreeHead(BaseDenseHead):
         for m in self.reg_convs:
             if isinstance(m.conv, nn.Conv2d):
                 normal_init(m.conv, std=0.01)
+        #
+        # for m in self.modules():
+        #     t = type(m)
+        #     if t is nn.Conv2d:
+        #         pass
+        #     elif t is nn.BatchNorm2d:
+        #         m.eps = 1e-3
+        #         m.momentum = 0.03
+        #     elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6]:
+        #         m.inplace = True
+
         bias_cls = bias_init_with_prob(0.01)
         normal_init(self.conv_cls, std=0.01, bias=bias_cls)
         normal_init(self.conv_reg, std=0.01)
@@ -149,6 +181,12 @@ class AnchorFreeHead(BaseDenseHead):
         for reg_layer in self.reg_convs:
             reg_feat = reg_layer(reg_feat)
         bbox_pred = self.conv_reg(reg_feat)
+        #
+        # cls_feat = self.cls_convs(cls_feat)
+        # cls_score = self.conv_cls(cls_feat)
+        # reg_feat = self.reg_convs(reg_feat)
+        # bbox_pred = self.conv_reg(reg_feat)
+        #
         return cls_score, bbox_pred, cls_feat, reg_feat
 
     @abstractmethod

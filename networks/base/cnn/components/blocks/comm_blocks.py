@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from ..conv_module import ConvModule
 from ..blocks.csp_bottlenck import Bottleneck
-
+from ..blocks.transformer_block import TransformerBlock
 
 
 class Focus(nn.Module):
@@ -33,3 +33,9 @@ class C3(nn.Module):
     def forward(self, x):
         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
 
+class C3TR(C3):
+    # C3 module with TransformerBlock()
+    def __init__(self, c1, c2, number=1, shortcut=True, g=1, e=0.5, **cfg):
+        super().__init__(c1, c2, number, shortcut, g, e, **cfg)
+        c_ = int(c2 * e)
+        self.m = TransformerBlock(c_, c_, 4, number)

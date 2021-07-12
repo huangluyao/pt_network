@@ -4,8 +4,9 @@
     "num_gpus": 1,
 
     "optimizer":{
-        "type": "Adam",
-        "lr": 0.0001,
+        "type": "SGD",
+        "lr": 0.001,
+        "momentum": 0.9,
         "weight_decay": 0.0001
     },
 
@@ -24,43 +25,28 @@
         "warm_up_epochs": 5,
         "max_epochs": 100
     },
-    "pretrained": "export/detection/FCOS_ResNet_NASFCOS_FPN/2021-07-01-00-53-13/checkpoints/val_best.pth",
     "model": {
+        "bbox_head":
+            {
+            "type": "FCOSHead",
+            "num_classes": 2,
+            "in_channels": 256,
+            "feat_channels": 256,
+            "stacked_convs": 2,
+            "strides": [8,16,32, 64, 128],
+            "regress_ranges":[[-1,64],[64,128],[128,256],[256,512],[512, 800]],
+            "loss_bbox": {"type": "CIoULoss"}
+            },
         "neck": {
-            "type":"NASFCOS_FPN",
+            "type":"FPN",
             "in_channels": [64, 128, 256, 512],
             "out_channels": 256,
-            "num_outs": 3,
+            "num_outs": 5,
             "start_level": 1,
             "end_level": -1,
             "add_extra_convs": true,
             "relu_before_extra_convs": true
-        },
-        "bbox_head": {
-            "type": "FCOSHead",
-            "num_classes": 1,
-            "in_channels": 256,
-            "feat_channels": 256,
-            "stacked_convs": 2,
-            "strides": [
-                8,
-                16,
-                32
-            ],
-            "regress_ranges": [
-                [
-                    -1,
-                    64
-                ],
-                [
-                    64,
-                    128
-                ],
-                [
-                    128,
-                    256
-                ]
-            ]
         }
-    }
+    },
+    "pretrained": "export/detection/FCOS_ResNet_FPN_VOCDataset/2021-07-02-18-02-32/checkpoints/val_best.pth"
 }
