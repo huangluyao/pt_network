@@ -189,3 +189,131 @@ def adjust_hue(img, factor):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     img[..., 0] = np.mod(img[..., 0] + factor * 360, 360)
     return cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+
+
+def multiply(img, multiplier):
+    """
+    Args:
+        img (numpy.ndarray): Image.
+        multiplier (numpy.ndarray): Multiplier coefficient.
+
+    Returns:
+        numpy.ndarray: Image multiplied by `multiplier` coefficient.
+
+    """
+    if img.dtype == np.uint8:
+        if len(multiplier.shape) == 1:
+            return _multiply_uint8_optimized(img, multiplier)
+        return _multiply_uint8(img, multiplier)
+    return _multiply_non_uint8(img, multiplier)
+
+
+def _multiply_non_uint8(img, multiplier):
+    dtype = img.dtype
+    maxval = MAX_VALUES_BY_DTYPE.get(dtype, 1.0)
+    return  clip(img * multiplier,  dtype, maxval)
+
+
+def _multiply_uint8(img, multiplier):
+    dtype = img.dtype
+    maxval = MAX_VALUES_BY_DTYPE.get(dtype, 1.0)
+    img = img.astype(np.float32)
+    return clip(np.multiply(img, multiplier), dtype, maxval)
+
+
+def _multiply_uint8_optimized(img, multiplier):
+    if is_grayscale_image(img) or len(multiplier) == 1:
+        multiplier = multiplier[0]
+        lut = np.arange(0, 256, dtype=np.float32)
+        lut *= multiplier
+        lut = clip(lut, np.uint8, MAX_VALUES_BY_DTYPE[img.dtype])
+        func = _maybe_process_in_chunks(cv2.LUT, lut=lut)
+        return func(img)
+
+    channels = img.shape[-1]
+    lut = [np.arange(0, 256, dtype=np.float32)] * channels
+    lut = np.stack(lut, axis=-1)
+
+    lut *= multiplier
+    lut = clip(lut, np.uint8, MAX_VALUES_BY_DTYPE[img.dtype])
+
+    images = []
+    for i in range(channels):
+        func = _maybe_process_in_chunks(cv2.LUT, lut=lut[:, i])
+        images.append(func(img[:, :, i]))
+    return np.stack(images, axis=-1)
+
+
+def _maybe_process_in_chunks(process_fn, **kwargs):
+    """
+    Wrap OpenCV function to enable processing images with more than 4 channels.
+
+    Limitations:
+        This wrapper requires image to be the first argument and rest must be sent via named arguments.
+
+    Args:
+        process_fn: Transform function (e.g cv2.resize).
+        kwargs: Additional parameters.
+
+    Returns:
+        numpy.ndarray: Transformed image.
+
+    """
+
+    def __process_fn(img):
+        num_channels = img.shape[2] if len(img.shape) == 3 else 1
+        if num_channels > 4:
+            chunks = []
+            for index in range(0, num_channels, 4):
+                if num_channels - index == 2:
+                    # Many OpenCV functions cannot work with 2-channel images
+                    for i in range(2):
+                        chunk = img[:, :, index + i : index + i + 1]
+                        chunk = process_fn(chunk, **kwargs)
+                        chunk = np.expand_dims(chunk, -1)
+                        chunks.append(chunk)
+                else:
+                    chunk = img[:, :, index : index + 4]
+                    chunk = process_fn(chunk, **kwargs)
+                    chunks.append(chunk)
+            img = np.dstack(chunks)
+        else:
+            img = process_fn(img, **kwargs)
+        return img
+
+    return __process_fn
+
+
+def random_crop(img, crop_height, crop_width, h_start, w_start):
+    height, width = img.shape[:2]
+    if height < crop_height or width < crop_width:
+        raise ValueError(
+            "Requested crop size ({crop_height}, {crop_width}) is "
+            "larger than the image size ({height}, {width})".format(
+                crop_height=crop_height, crop_width=crop_width, height=height, width=width
+            )
+        )
+
+    x1, y1, x2, y2 = get_random_crop_coords(height, width, crop_height, crop_width, h_start, w_start)
+    img = img[y1:y2, x1:x2]
+    return img
+
+
+def get_random_crop_coords(height, width, crop_height, crop_width, h_start, w_start):
+    y1 = int((height-crop_height)*h_start)
+    y2 = y1+ crop_height
+    x1 = int((width-crop_width)* w_start)
+    x2 = x1+ crop_width
+    return x1, y1, x2, y2
+
+
+def bbox_random_crop(bbox, crop_height, crop_width, h_start, w_start, rows, cols):
+    crop_coords = get_random_crop_coords(rows, cols, crop_height, crop_width, h_start, w_start)
+
+    return crop_bbox_by_coords(bbox, crop_coords)
+
+def crop_bbox_by_coords(bbox,  crop_coords):
+    x_min, y_min, x_max, y_max = bbox[:4]
+    x1, y1, _, _ = crop_coords
+    cropped_bbox = x_min - x1, y_min - y1, x_max - x1, y_max - y1
+    return cropped_bbox

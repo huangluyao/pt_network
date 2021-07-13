@@ -40,6 +40,33 @@ class Visualizer:
             vis_result = show_detections(ori_image, boxes, self._class_names, self._vis_score_threshold)
             cv2.imwrite(vis_paths[idx], vis_result)
 
+    def _visualize_seg(self, img_paths, predictions, vis_predictions_dir):
+        num_preds = len(img_paths)
+        num_classes = len(self._class_names)
+        if not os.path.exists(vis_predictions_dir):
+            os.makedirs(vis_predictions_dir)
+        vis_paths = [os.path.join(vis_predictions_dir, 'pred_%03d.png'%(idx)) for idx in range(num_preds)]
+
+        bgr_values = get_BGR_values(num_classes)
+
+        for idx in range(num_preds):
+            ori_image = cv2.imread(img_paths[idx])
+            ori_size = ori_image.shape[:2]
+            image = cv2.resize(ori_image, (self._input_size[1], self._input_size[0]))
+            mask = get_pred(predictions[idx], self._vis_score_threshold)
+            image, mask = resize_mask(image, mask, ori_size)
+            vis_preds = np.zeros_like(ori_image)
+            for class_id in range(1, num_classes+1):
+                vis_preds[:,:,0][mask==class_id] = bgr_values[class_id-1][0]
+                vis_preds[:,:,1][mask==class_id] = bgr_values[class_id-1][1]
+                vis_preds[:,:,2][mask==class_id] = bgr_values[class_id-1][2]
+
+            mask = (mask==0)[:,:,None]
+            vis_preds = (ori_image*mask+(1-mask)*(vis_preds*0.5+ori_image*0.5)).astype(np.uint8)
+            vis_result = np.hstack((ori_image, vis_preds))
+            cv2.imwrite(vis_paths[idx], vis_result)
+
+
 
 def resize_box(image, boxes, size):
     resize_h, resize_w = size
@@ -58,6 +85,22 @@ def resize_box(image, boxes, size):
     boxes[:, :4] += add_matrix
 
     return im_padding, boxes
+
+
+def resize_mask(image, mask, size):
+    resize_h, resize_w = size
+    im_h, im_w, im_c = image.shape
+    resize_ratio = min(resize_w / im_w, resize_h / im_h)
+    new_w = round(im_w * resize_ratio)
+    new_h = round(im_h * resize_ratio)
+    im_resized = cv2.resize(image, (new_w, new_h))
+    mask_resized = cv2.resize(mask, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
+    im_padding = np.full([resize_h, resize_w, im_c], 0)
+    im_padding[(resize_h-new_h)//2:(resize_h-new_h)//2 + new_h, (resize_w-new_w)//2:(resize_w-new_w)//2 + new_w,  :] = im_resized
+    mask_padding = np.full([resize_h, resize_w], 0)
+    mask_padding[(resize_h-new_h)//2:(resize_h-new_h)//2 + new_h, (resize_w-new_w)//2:(resize_w-new_w)//2 + new_w] = mask_resized
+
+    return im_padding, mask_padding
 
 
 def show_detections(image, detections, class_names, score_threshold=None):
@@ -139,3 +182,14 @@ def get_BGR_values(n_colors):
         rgb_list = _RGB_LIST * multiple
         bgr_list = [(v[2], v[1], v[0]) for v in rgb_list[0:n_colors]]
     return bgr_list
+
+def get_pred(y_prob, threshold=None):
+    if threshold is not None:
+        y_pred = (y_prob>=threshold)*1
+    else:
+        y_pred = np.argmax(y_prob, axis=-1)
+
+    if y_pred.ndim > 2:
+        y_pred = np.squeeze(y_pred, axis=-1)
+
+    return y_pred

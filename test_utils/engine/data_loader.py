@@ -76,14 +76,13 @@ def build_data_loader(task, type, train_data_path, val_data_path, loader_cfg, **
     train_dataset = build_dataset(train_cfg_dict)
     val_dataset = build_dataset(val_cfg_dict)
 
-    if task == "classification":
+    if task == "classification" or task=="segmentation":
         if 'FS' in type:
             dataset_collate = few_shot_dataset_collate
         else:
             dataset_collate = classification_dataset_collate
     elif task=="detection":
         dataset_collate = detection_dataset_collate
-        pass
 
     train_data_loader = torch.utils.data.DataLoader(train_dataset, shuffle=True, collate_fn=dataset_collate, **loader_cfg)
     val_data_loader = torch.utils.data.DataLoader(val_dataset, collate_fn=dataset_collate, **loader_cfg)

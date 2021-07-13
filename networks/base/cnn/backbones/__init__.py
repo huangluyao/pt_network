@@ -11,5 +11,6 @@ from .shufflenet_v2 import ShuffleNetV2
 from .shufflenet_v2_plus import ShuffleNetV2Plus
 from .dsnet import DSNet
 from .utils import *
+from .mobilenetv3 import MobileNetV3
 
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

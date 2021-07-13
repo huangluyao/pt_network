@@ -81,6 +81,20 @@ class Trainer:
             self._vis_predictions_dir = os.path.join(
                 self.performance_dir, 'vis_predictions')
 
+        elif self._task == "segmentation":
+            self._visualizer = Visualizer(
+                task=self._task,
+                class_names=self.train_data_loader.dataset.class_names,
+                input_size=self.input_size
+            )
+            self._vis_predictions_dir = os.path.join(
+                self.performance_dir, 'vis_predictions')
+
+            self.vis_score_threshold = None
+
+
+
+            pass
     def build_model(self, cfg):
         model_cfg = cfg.get('model')
         head_cfg = model_cfg.get('head', None)
@@ -125,6 +139,8 @@ class Trainer:
                 self._validate_cls()
             elif self._task == "detection":
                 self._validate_det(self.max_number_gt)
+            elif self._task == "segmentation":
+                self._validate_seg()
 
             self._evaluator.record_cur_epoch(
                 learning_rate=cur_lr,
@@ -191,7 +207,7 @@ class Trainer:
             pred = self.model(img_batch)
             if step ==0:
                 pred_array = pred.detach().cpu().numpy()
-                gt_array = label_batch['bboxes']
+                gt_array = label_batch['gt_labels']
             else:
                 pred_array = np.concatenate([pred_array, pred.detach().cpu().numpy()], axis=0)
                 gt_array = np.concatenate([gt_array, label_batch['gt_labels']], axis=0)
@@ -224,6 +240,27 @@ class Trainer:
             else:
                 pred_array = np.concatenate([pred_array, pred.detach().cpu().numpy()], axis=0)
                 gt_array = np.concatenate([gt_array, np.array(batch_label)], axis=0)
+
+        self._val_pred = pred_array
+        self._val_true = gt_array
+        self._val_img_paths = img_paths
+
+    def _validate_seg(self):
+        self.model.eval()
+        img_paths = []
+        for step, (img_batch, label_batch) in enumerate(self.val_data_loader):
+            img_paths += [img_path for img_path in label_batch['image_path']]
+            if not isinstance(img_batch, torch.Tensor):
+                img_batch = torch.from_numpy(img_batch).to(self._device, dtype=torch.float32)
+            pred = self.model(img_batch)
+            if step == 0:
+                pred_array = pred.detach().cpu().numpy()
+                pred_array = np.transpose(pred_array, [0, 2, 3, 1])
+                gt_array = label_batch['gt_masks']
+            else:
+                pre_array1 = np.transpose(pred.detach().cpu().numpy(), [0, 2, 3, 1])
+                pred_array = np.concatenate([pred_array, pre_array1], axis=0)
+                gt_array = np.concatenate([gt_array, label_batch['gt_masks']], axis=0)
 
         self._val_pred = pred_array
         self._val_true = gt_array

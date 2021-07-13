@@ -31,7 +31,7 @@ class Resize(BasicTransform):
         return (x_min, y_min, x_max, y_max) + tail
 
     def apply_to_mask(self, img, **params):
-        pass
+        return resize(img, self.height, self.width, self.interpolation)
 
     def get_params(self, **params):
         return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}
@@ -58,7 +58,7 @@ class RandomFlip(BasicTransform):
         return bbox_flip(bbox, self.direction, params["rows"], params['cols'])
 
     def apply_to_mask(self, img, **params):
-        pass
+        return random_flip(img, self.direction)
 
     def get_params(self, **params):
         return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}
@@ -93,6 +93,10 @@ class Rotate(BasicTransform):
 
     def apply_to_bbox(self, bbox, angle=0, **params):
         return bbox_rotate(bbox, angle, params["rows"], params["cols"])
+
+    def apply_to_mask(self, img, angle=0, interpolation=cv2.INTER_LINEAR, **params):
+        return rotate(img, angle, interpolation, self.border_mode, self.value)
+
 
 
 @TRANSFORM.registry()
@@ -166,3 +170,62 @@ class ColorJitter(BasicTransform):
     @property
     def targets(self):
         return {"image": self.apply} # image only transform
+
+
+@TRANSFORM.registry()
+class MultiplicativeNoise(BasicTransform):
+
+    def __init__(self, multiplier=(0.9, 1.1), per_channel=False, **kwargs):
+        super(MultiplicativeNoise, self).__init__(**kwargs)
+
+        if isinstance(multiplier, (int, float)):
+            multiplier = -multiplier, +multiplier
+        self.per_channel = per_channel
+
+    def apply(self, img, multiplier=np.array([1]), **params):
+
+        return multiply(img, multiplier)
+
+    def get_params(self, **params):
+        if self.multiplier[0] == self.multiplier[1]:
+            return {"multiplier": np.array([self.multiplier[0]])}
+
+        img = params["image"]
+
+        h, w = img.shape[:2]
+
+        if self.per_channel:
+            c = 1 if is_grayscale_image(img) else img.shape[-1]
+        else:
+            c = 1
+
+        multiplier = np.random.uniform(self.multiplier[0], self.multiplier[1], [c])
+        if is_grayscale_image(img):
+            multiplier = np.squeeze(multiplier)
+
+        return {"multiplier": multiplier}
+
+
+    @property
+    def targets(self):
+        return {"image": self.apply} # image only transform
+
+@TRANSFORM.registry()
+class RandomCrop(BasicTransform):
+    def __init__(self, height, width, **kwargs):
+        super(RandomCrop, self).__init__(**kwargs)
+        self.height = height
+        self.width = width
+
+    def apply(self, img, h_start=0, w_start=0, **params):
+        return random_crop(img, self.height, self.width, h_start, w_start)
+
+    def get_params(self, **params):
+        height, width = params["image"].shape[:2]
+        return {"h_start": random.random(), "w_start":random.random(), "rows":width, "cols":height}
+
+    def apply_to_mask(self, img, h_start=0, w_start=0, **params):
+        return random_crop(img, self.height, self.width, h_start, w_start)
+
+    def apply_to_bbox(self,bbox,rows, cols, h_start=0, w_start=0, **params):
+        return bbox_random_crop(bbox, self.height, self.width, h_start, w_start, rows, cols)

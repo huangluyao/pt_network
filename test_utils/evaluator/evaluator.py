@@ -30,7 +30,7 @@ class Evaluator:
         self._metric_vs_epoch_file = "%s/metric_vs_epoch_%s.png" %(self._performance_dir, self._model_name)
         self._record_file = self._metric_vs_epoch_file.replace("png", "txt")
 
-        if task == 'classification':
+        if task == 'classification' or task == 'segmentation':
             self._auc_per_epoch = []
             self._aupr_per_epoch = []
             self._ks_per_epoch = []
@@ -40,6 +40,10 @@ class Evaluator:
             self._f1_per_epoch = []
             self._iou_per_epoch = []
             self.record_cur_epoch = self._record_cur_epoch_cls
+            if task == 'segmentation' and class_names[0] == 'background':
+                self._ignore_background = True
+            else:
+                self._ignore_background = False
         elif task == 'detection':
             self._ap_per_epoch = []
             self.record_cur_epoch = self._record_cur_epoch_det

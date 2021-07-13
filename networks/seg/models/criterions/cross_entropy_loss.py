@@ -19,7 +19,7 @@ def cross_entropy(pred,
         ignore_index = -100
     loss = F.cross_entropy(
         pred,
-        label,
+        label.long(),
         weight=class_weight,
         reduction='none',
         ignore_index=ignore_index)
@@ -204,6 +204,7 @@ class CrossEntropyLoss(nn.Module):
                 weight=None,
                 avg_factor=None,
                 reduction_override=None,
+                ignore_label = None,
                 **kwargs):
         """Forward function."""
         assert reduction_override in (None, 'none', 'mean', 'sum')
@@ -214,6 +215,8 @@ class CrossEntropyLoss(nn.Module):
         else:
             class_weight = None
 
+        if ignore_label is None:
+            ignore_label = self.ignore_label
         loss_cls = self.loss_weight * self.cls_criterion(
             pred,
             label,
@@ -221,7 +224,7 @@ class CrossEntropyLoss(nn.Module):
             class_weight=class_weight,
             reduction=reduction,
             avg_factor=avg_factor,
-            ignore_index=self.ignore_label)
+            ignore_index=ignore_label)
 
         return loss_cls
 

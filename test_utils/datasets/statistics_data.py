@@ -46,7 +46,7 @@ def calc_mean_std(images_path):
 
 def statistics_data(image_paths, dataset_type):
 
-    if dataset_type=="DetectionDataset":
+    if dataset_type=="DetectionDataset" or "LabelMeSegDataset":
         return statistics_detection_data(image_paths)
     elif dataset_type == "LabelmeTxtDataset":
         return statistics_labelme_txt_data(image_paths)

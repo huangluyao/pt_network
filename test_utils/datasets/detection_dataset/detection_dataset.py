@@ -51,7 +51,7 @@ class DetectionDataset(BaseDataset):
                     label_name = label_info.get('label', None)
                     if not label_name:
                         continue
-                    bbox = cv2.boundingRect(np.array(label_info['points']))
+                    bbox = cv2.boundingRect(np.array(label_info['points']).astype(np.float32))
                     if label_name not in self.class_names:
                         self.class_names.append(label_name)
 

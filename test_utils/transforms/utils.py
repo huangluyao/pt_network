@@ -1,8 +1,16 @@
 # _*_coding=utf-8 _*_
 # @author Luyao Huang
 # @date 2021/6/10 下午5:42
-
+from functools import wraps
 import numpy as np
+
+
+MAX_VALUES_BY_DTYPE = {
+    np.dtype("uint8"): 255,
+    np.dtype("uint16"): 65535,
+    np.dtype("uint32"): 4294967295,
+    np.dtype("float32"): 1.0,
+}
 
 
 def preserve_channel_dim(func):
@@ -44,3 +52,13 @@ def is_grayscale_image(image):
 
 def clip(img, dtype, maxval):
     return np.clip(img, 0, maxval).astype(dtype)
+
+
+def clipped(func):
+    @wraps(func)
+    def wrapped_function(img, *args, **kwargs):
+        dtype = img.dtype
+        maxval = MAX_VALUES_BY_DTYPE.get(dtype, 1.0)
+        return clip(func(img, *args, **kwargs), dtype, maxval)
+
+    return wrapped_function
