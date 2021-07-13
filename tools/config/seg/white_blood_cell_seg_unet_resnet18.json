@@ -1,6 +1,6 @@
 {
     "task": "segmentation",
-    "num_gpus": 1,
+    "gpu_id": 0,
     "model": "configs/seg/models/unet/unet_resnet18.json",
     "_update_": {
         "model": {

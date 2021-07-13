@@ -1,7 +1,7 @@
 {
-    "__base__": ["configs/det/models/FCOS/FCOS_dsnet.json", "tools/config/augmentation/base_augmentation.json"],
+    "__base__": ["configs/det/models/FCOS/FCOS_resnet18_csp-pan.json", "tools/config/augmentation/base_augmentation.json"],
     "task": "detection",
-    "gpu_id": 3,
+    "gpu_id": 0,
 
     "optimizer":{
         "type": "AdamW",
@@ -11,8 +11,8 @@
     "dataset": {
         "input_size": [640, 640],
         "type": "DetectionDataset",
-        "train_data_path": "/nas/datasets/huangluyao/detection/cai_qie_bu_liang/train",
-        "val_data_path": "/nas/datasets/huangluyao/detection/cai_qie_bu_liang/val"
+        "train_data_path": "D:\\datasets\\huangluyao\\detection\\df_new\\train",
+        "val_data_path": "D:\\datasets\\huangluyao\\detection\\df_new\\val"
     },
     "loader_cfg": {
         "batch_size": 16

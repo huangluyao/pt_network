@@ -2,7 +2,7 @@
   "__base__": ["tools/config/augmentation/base_augmentation.json", "configs/cls/models/resnet/resnet18.json"],
   "task": "classification",
   "output_dir": "./export",
-  "num_gpus": 1,
+  "gpu_id": 1,
   "optimizer":{
     "type": "SGD",
     "lr": 0.001,

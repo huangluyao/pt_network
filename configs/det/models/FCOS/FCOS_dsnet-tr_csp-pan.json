@@ -8,25 +8,26 @@
             "width_multiple": 0.50,
             "num_classes": null,
             "act_cfg": {"type": "SiLU"},
-            "norm_cfg":{"type":"BN", "requires_grad":false}
+            "norm_cfg":{"type":"BN", "requires_grad":false},
+            "out_levels": [3, 4, 5 ],
+            "use_transformer": true
         },
         "neck": {
-            "type":"FPN",
-            "in_channels": [64,128,256,512],
-            "out_channels": 256,
-            "num_outs": 5,
-            "start_level": 1,
-            "end_level": -1,
-            "add_extra_convs": true,
-            "relu_before_extra_convs": true
+            "type": "CSP_PAN",
+            "input_channels": [128, 256, 512],
+            "output_channels": [128, 128, 128],
+            "strides": [8, 16, 32],
+            "act_cfg": {"type": "SiLU"},
+            "norm_cfg":{"type":"BN", "requires_grad":false}
         },
         "bbox_head": {
             "type": "FCOSHead",
             "num_classes": 1,
-            "in_channels": 256,
-            "feat_channels": 256,
+            "in_channels": 128,
+            "feat_channels": 128,
             "stacked_convs": 2,
-            "strides": [8,16,32,64,128]
+            "strides": [8,16,32],
+            "regress_ranges":[[-1,64],[64,128],[128,256]]
         },
 
         "train_cfg":

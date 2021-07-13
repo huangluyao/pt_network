@@ -1,6 +1,6 @@
 {
     "_base_": "../../../_base_/models/unet/unet.json",
-    "pretrained": "nas://model_zoo/pth/gluoncv/ResNet18_v1b.pth",
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
     "model": {
         "backbone": {
             "type": "ResNet",
