@@ -20,8 +20,10 @@ def setup():
                         # default='tools/config/det/fcos/fcos_resnet18_finetune.json',
                         # default='tools/config/det/yolof/yolof_resnet18_caiqiebuliang_finetune.json',
                         # default='tools/config/det/yolof/yolof_resnet18_voc.json',
-                        # default="tools/config/det/fcos/fcos_resnet18_csp-pan_caiqiebuliang.json",
-                        default="tools/config/seg/caiqiebuliang_unet_resnet18.json",
+                        default="tools/config/det/fcos/fcos_resnet18_csp-pan_caiqiebuliang.json",
+                        # default="tools/config/seg/caiqiebuliang_unet_resnet18.json",
+                        # default= "tools/config/seg/caiqiebuliang_unet_mobilenetv3.json",
+                        # default= "tools/config/cls/mobilnetv3_imagenet20.json",
                         type=str)
     parser.add_argument('-p','--pretrained', type=str, default='', help='initial weights path')
 

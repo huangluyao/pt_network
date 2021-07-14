@@ -1,0 +1,36 @@
+{
+  "__base__": ["tools/config/augmentation/base_augmentation.json", "configs/cls/models/mobilnetv3/mobilenetv3.json"],
+  "task": "classification",
+  "output_dir": "./export",
+  "gpu_id": 3,
+  "optimizer":{
+    "type": "SGD",
+    "lr": 0.001,
+    "momentum": 0.9,
+    "weight_decay": 0.0001
+  },
+  "scheduler": {
+    "warm_up_epochs": 5,
+    "max_epochs": 200
+  },
+  "dataset": {
+    "type": "ClsDataSet",
+    "input_size": [
+      224,
+      224
+    ],
+    "test": "tools/config/augmentation.json",
+    "num_classes": 20,
+    "train_data_path": "/nas/datasets/standard/imagenet20/train",
+    "val_data_path": "/nas/datasets/standard/imagenet20/val",
+    "statistics_data": {
+      "means": [105.502, 116.261, 120.332],
+      "stds": [72.885, 68.471, 69.954]
+    }
+  },
+
+  "loader_cfg": {
+      "batch_size": 128,
+      "num_workers": 8
+  }
+}
