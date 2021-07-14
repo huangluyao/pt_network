@@ -30,42 +30,45 @@ class DetectionDataset(BaseDataset):
 
     def get_image_info(self, data_path, mode, **kwargs):
 
-        annotations_path = os.path.join(data_path, 'annotations')
-        annotation_files = os.listdir(annotations_path)
-
+        images_path = os.path.join(data_path, 'images')
+        image_files = os.listdir(images_path)
+        IMAGE_FORMER = ['JPEG', 'JPG', 'JPE', 'BMP', 'PNG', 'JP2', 'PBM', 'PGM', 'PPM']
         image_infos = list()
 
         # parser annotations
-        for annotation_file in annotation_files:
-            annotation_file_path = os.path.join(annotations_path, annotation_file)
+        for image_file in image_files:
 
-            if annotation_file_path.endswith('.json'):
-                with open(annotation_file_path) as f:
-                    info = json.load(f)
-                labels_info = info.get('shapes', None)
+            image_name, suffix = image_file.split('.')
+            if suffix.upper() in IMAGE_FORMER:
+                image_file_path = os.path.join(images_path, image_file)
+                annotation_file_path = os.path.join(images_path.replace('images', 'annotations'), image_name+'.json')
 
-                bboxes = []
-                label_names = []
+                if os.path.exists(annotation_file_path) and os.path.exists(image_file_path):
+                    with open(annotation_file_path) as f:
+                        info = json.load(f)
+                        labels_info = info.get('shapes', None)
 
-                for label_info in labels_info:
-                    label_name = label_info.get('label', None)
-                    if not label_name:
-                        continue
-                    bbox = cv2.boundingRect(np.array(label_info['points']).astype(np.float32))
-                    if label_name not in self.class_names:
-                        self.class_names.append(label_name)
+                    bboxes = []
+                    label_names = []
+                    for label_info in labels_info:
+                        label_name = label_info.get('label', None)
+                        if not label_name:
+                            continue
+                        bbox = cv2.boundingRect(np.array(label_info['points']).astype(np.float32))
+                        if label_name not in self.class_names:
+                            self.class_names.append(label_name)
 
-                    bboxes.append([bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]])
-                    label_names.append(self.class_names.index(label_name))
+                        bboxes.append([bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]])
+                        label_names.append(self.class_names.index(label_name))
 
-                if self.max_number_object_per_img < len(label_names):
-                    self.max_number_object_per_img = len(label_names)
+                    if self.max_number_object_per_img < len(label_names):
+                        self.max_number_object_per_img = len(label_names)
 
-                image_info = dict(image_path=annotation_file_path.replace('annotations', 'images').replace('json', 'png'),
-                                  bboxes=bboxes,
-                                  label_index=np.array(label_names)
-                                  )
-                image_infos.append(image_info)
+                    image_info = dict(image_path=image_file_path,
+                                      bboxes=bboxes,
+                                      label_index=np.array(label_names)
+                                      )
+                    image_infos.append(image_info)
 
         return image_infos
 
