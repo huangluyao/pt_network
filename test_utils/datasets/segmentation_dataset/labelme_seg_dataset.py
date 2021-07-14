@@ -21,7 +21,7 @@ class LabelMeSegDataset():
         image_info = self.images_info[item]
         image = cv2.imread(image_info["image_path"])
         if image is None:
-            raise "Not such image file %s" % image_info["image_path"]
+            raise ValueError(f"Not such image file {image_info['image_path']}")
 
         mask = np.zeros(image.shape[:2])
         for label_point, index in zip(image_info["label_points"], image_info["label_index"]):

@@ -46,12 +46,14 @@ def calc_mean_std(images_path):
 
 def statistics_data(image_paths, dataset_type):
 
-    if dataset_type=="DetectionDataset" or "LabelMeSegDataset":
+    if dataset_type=="DetectionDataset" or dataset_type=="LabelMeSegDataset":
         return statistics_detection_data(image_paths)
     elif dataset_type == "LabelmeTxtDataset":
         return statistics_labelme_txt_data(image_paths)
     elif dataset_type =="VOCDataset":
         return statistics_voc_data(image_paths)
+    elif dataset_type == "ClsDataSet":
+        return statistics_cls_data(image_paths)
 
 
 def statistics_labelme_txt_data(image_paths):
@@ -94,4 +96,17 @@ def statistics_voc_data(image_paths):
             image_paths = os.path.join(image_paths[0], 'JPEGImages')
             images_path = [os.path.join(image_paths, image_file) for image_file in os.listdir(image_paths)]
             merge_paths = images_path
+    return calc_mean_std(merge_paths)
+
+def statistics_cls_data(image_paths):
+    merge_paths = []
+    if isinstance(image_paths, list):
+        for image_path in image_paths:
+            category_folders = [os.path.join(image_path, image_file) for image_file in os.listdir(image_path) if not os.path.isfile(os.path.join(image_path, image_file))]
+            for category_folder in category_folders:
+                merge_paths += [os.path.join(category_folder, file_name) for file_name in os.listdir(category_folder)]
+    elif isinstance(image_paths, str):
+            category_folders = [os.path.join(image_paths, image_file) for image_file in os.listdir(image_paths) if not os.path.isfile(os.path.join(image_paths, image_file))]
+            for category_folder in category_folders:
+                merge_paths += [os.path.join(category_folder, file_name) for file_name in os.listdir(category_folder)]
     return calc_mean_std(merge_paths)

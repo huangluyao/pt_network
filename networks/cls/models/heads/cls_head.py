@@ -17,7 +17,7 @@ class ClsHead(BaseHead):
         num_samples = len(inputs)
         losses = dict()
         loss = self.compute_loss(inputs, gt_labels, avg_factor=num_samples)
-        losses['losses'] = loss
+        losses['loss'] = loss
         return losses
 
     def forward(self, inputs):

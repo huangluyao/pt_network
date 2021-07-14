@@ -38,14 +38,20 @@ class Trainer:
 
         # statistics data info
         self.logger.info('statistics_data:')
-        self.means, self.stds = statistics_data([cfg['dataset']['train_data_path'], cfg['dataset']['val_data_path']],
-                                                cfg['dataset']['type'])
+        if cfg["dataset"].get("statistics_data", None):
+            self.means = cfg["dataset"].get("statistics_data", None).get("means")
+            self.stds = cfg["dataset"].get("statistics_data", None).get("stds")
+        else:
+            self.means, self.stds = statistics_data([cfg['dataset']['train_data_path'], cfg['dataset']['val_data_path']],
+                                                    cfg['dataset']['type'])
         self.logger.info(f'data means: {self.means}')
         self.logger.info(f'data stds: {self.stds}')
         # update means and stds
         self.update_dateset_info(cfg['dataset'])
         # build loader
         self.train_data_loader, self.val_data_loader = build_data_loader(self._task, loader_cfg=cfg['loader_cfg'], **cfg['dataset'])
+        # self.logger.info(self.train_data_loader.dataset.class_names)
+
         self._checkpoint_dir = os.path.join(cfg['output_dir'], 'checkpoints')
         if not os.path.exists(self._checkpoint_dir):
             os.makedirs(self._checkpoint_dir)
@@ -53,7 +59,7 @@ class Trainer:
         self.performance_dir = os.path.join(cfg['output_dir'], 'performance')
         self._evaluator = Evaluator(self._task, model_name=model_name,
                                     logger=logger,
-                                    num_classes=len(self.train_data_loader.dataset.class_names),
+                                    num_classes=cfg["dataset"]["num_classes"],
                                     class_names=self.train_data_loader.dataset.class_names,
                                     performance_dir=self.performance_dir
                                     )
@@ -92,18 +98,18 @@ class Trainer:
 
             self.vis_score_threshold = None
 
-
-
             pass
     def build_model(self, cfg):
         model_cfg = cfg.get('model')
-        head_cfg = model_cfg.get('head', None)
-        if head_cfg:
-            head_cfg.update(dict(num_classes=cfg['dataset']['num_classes']))
-
         if cfg.get('task') == "classification":
+            backbone_cfg = model_cfg.get('backbone', None)
+            if backbone_cfg:
+                backbone_cfg.update(dict(num_classes=cfg['dataset']['num_classes']))
             model = build_classifier(model_cfg)
         elif cfg.get('task') == "detection":
+            head_cfg = model_cfg.get('head', None)
+            if head_cfg:
+                head_cfg.update(dict(num_classes=cfg['dataset']['num_classes']))
             model = build_detector(model_cfg)
         elif cfg.get('task') == "segmentation":
             model = build_segmentor(model_cfg)

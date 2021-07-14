@@ -102,7 +102,7 @@ class MobileNetV3(nn.Module):
 
         if num_classes is not None:
             self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-            self.classifier = nn.Linear(exp_size,  num_classes)
+            self.classifier = nn.Linear(output_channel,  num_classes)
 
 
     def forward(self, x):

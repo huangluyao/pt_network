@@ -11,7 +11,7 @@ from test_utils.datasets import DATASET
 
 
 @DATASET.registry()
-class Cls_DataSet(Dataset):
+class ClsDataSet(Dataset):
 
     class_names = []
 
@@ -22,6 +22,7 @@ class Cls_DataSet(Dataset):
         self.transfrom = Compose(augmentations[mode])
 
     def _get_info(self, data_path):
+        IMAGE_FORMER = ['JPEG', 'JPG', 'JPE', 'BMP', 'PNG', 'JP2', 'PBM', 'PGM', 'PPM']
         image_paths = list()
         image_labels = list()
         num_classes = 0
@@ -33,9 +34,11 @@ class Cls_DataSet(Dataset):
                 num_classes += 1
                 images_name = os.listdir(category_path)
                 for image_name in images_name:
-                    image_path = os.path.join(category_path, image_name)
-                    image_paths.append(image_path)
-                    image_labels.append(cls_indx)
+                    suffix = image_name.split('.')[-1].upper()
+                    if suffix in IMAGE_FORMER:
+                        image_path = os.path.join(category_path, image_name)
+                        image_paths.append(image_path)
+                        image_labels.append(cls_indx)
         return image_paths, image_labels, num_classes
 
     def __getitem__(self, item):
