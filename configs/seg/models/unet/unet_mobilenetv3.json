@@ -1,6 +1,6 @@
 {
     "_base_": "../../../_base_/models/unet/unet.json",
-    "pretrained": "nas://model_zoo/pth/gluoncv/ResNeSt14.pth",
+    "pretrained": "model_zoo/pth/backbone/mobilnetv3/mobilenetv3_large.pth",
     "model": {
         "backbone": {
             "type": "MobileNetV3",

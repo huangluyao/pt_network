@@ -1,6 +1,6 @@
 {
     "_base_": "../../../_base_/models/unet/unet.json",
-    "pretrained": "nas://model_zoo/pth/resnest/resnest50_fast_2s2x40d-9d126481.pth",
+    "pretrained": "model_zoo/pth/backbone/resnet/resnest50_fast_2s2x40d-9d126481.pth",
     "model": {
         "backbone": {
             "type": "ResNeSt",
