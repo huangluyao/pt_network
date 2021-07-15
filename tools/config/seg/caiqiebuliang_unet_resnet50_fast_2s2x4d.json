@@ -1,6 +1,6 @@
 {
     "__base__": [
-        "configs/seg/models/unet/unet_mobilenetv3.json",
+        "configs/seg/models/unet/unet_resnest50_fast_2s2x40d.json",
         "tools/config/augmentation/base_augmentation.json"
     ],
     "task": "segmentation",
@@ -15,15 +15,13 @@
             224,
             224
         ],
-        "type": "LabelMeSegDataset",
         "num_classes": 2,
-        "..train_data_path": "/nas/datasets/huangluyao/segmentation/df_new/train",
-        "..val_data_path": "/nas/datasets/huangluyao/segmentation/df_new/val",
+        "type": "LabelMeSegDataset",
         "train_data_path": "D:\\datasets\\huangluyao\\segmentation\\df_new\\train",
         "val_data_path": "D:\\datasets\\huangluyao\\segmentation\\df_new\\val"
     },
     "loader_cfg": {
-        "batch_size": 16
+        "batch_size": 8
     },
     "scheduler": {
         "warm_up_epochs": 5,

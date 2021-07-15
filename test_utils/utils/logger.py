@@ -38,10 +38,16 @@ def setup_logger(
     task_name = cfg['model'].get('type', None)
     backbone_name = cfg['model'].get('backbone').get('type', None)
     neck_name = cfg['model'].get('neck', None)
+    head_name = cfg['model'].get("decode_head", None)
     datasets_name = cfg['dataset'].get('type')
     if neck_name is not None:
         neck_name = neck_name.get('type', None)
-    task_name = f"{task_name}_{backbone_name}_{neck_name}_{datasets_name}"
+        task_name = f"{task_name}_{backbone_name}_{neck_name}_{datasets_name}"
+    elif head_name is not None:
+        head_name = head_name.get('type', None)
+        task_name = f"{task_name}_{backbone_name}_{head_name}_{datasets_name}"
+    else:
+        task_name = f"{task_name}_{backbone_name}_{datasets_name}"
     if output is None:
         output = os.path.join('./export', cfg["task"], task_name, cur_time)
     else:

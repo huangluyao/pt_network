@@ -101,15 +101,16 @@ class Trainer:
             pass
     def build_model(self, cfg):
         model_cfg = cfg.get('model')
+        number_classes_model ={"classification":"backbone",
+                               "detection":"bbox_head",
+                               "segmentation":"decode_head"
+                               }
+        num_classes_cfg = model_cfg.get(number_classes_model[cfg.get("task")], None)
+        if num_classes_cfg:
+            num_classes_cfg.update(dict(num_classes=cfg['dataset']['num_classes']))
         if cfg.get('task') == "classification":
-            backbone_cfg = model_cfg.get('backbone', None)
-            if backbone_cfg:
-                backbone_cfg.update(dict(num_classes=cfg['dataset']['num_classes']))
             model = build_classifier(model_cfg)
         elif cfg.get('task') == "detection":
-            head_cfg = model_cfg.get('head', None)
-            if head_cfg:
-                head_cfg.update(dict(num_classes=cfg['dataset']['num_classes']))
             model = build_detector(model_cfg)
         elif cfg.get('task') == "segmentation":
             model = build_segmentor(model_cfg)
@@ -132,7 +133,7 @@ class Trainer:
             epoch_st = time.time()
             self.train_one_epoch()
             epoch_time = time.time() -epoch_st
-
+            self.scheduler.step()
             mean_loss = np.mean(self._cur_epoch_losses)
             epoch_status = ("Epoch %6d \tTime %5.2f \t[loss]:\taverage loss:%7.8f \tdecreases:%7.4f"
                             %(self._cur_epoch, epoch_time, mean_loss,
@@ -302,11 +303,10 @@ class Trainer:
             cur_loss = losses['loss']
             cur_loss.backward()
             self.optimizer.step()
-            self.scheduler.step()
             cur_lr = self.scheduler.get_lr()[0]
             self._cur_epoch_losses.append(cur_loss.detach().cpu().numpy())
             if step % 10 == 0:
-                step_status = '=> Step %6d \tTime %5.2f \tLr %2.5f \t[Loss]:' %(
+                step_status = '=> Step %6d \tTime %5.2f \tLr %2.6f \t[Loss]:' %(
                     step, step_time, cur_lr)
                 for key in losses:
                     step_status += ' %s: %7.4f' %(key, losses[key].detach().cpu().numpy())

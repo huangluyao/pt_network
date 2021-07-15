@@ -28,6 +28,18 @@ def build_scheduler(optimizer, lr_config):
     _lr_config = lr_config.copy()
     warm_up_steps = _lr_config.pop('warm_up_epochs', 1)
     max_steps = _lr_config.pop('max_epochs', 1000)
-    _scheduler = lambda step: step / warm_up_steps if step <= warm_up_steps \
-                  else 0.5 * (1 + math.cos((step - warm_up_steps) / (max_steps - warm_up_steps) * math.pi))
+    lr_decay_method = _lr_config.pop("lr_decay_method", "cosine_decay_restarts")
+
+    if lr_decay_method == "cosine_decay_restarts":
+        _scheduler = lambda step: step / warm_up_steps if step <= warm_up_steps \
+                      else 0.5 * (1 + math.cos((step - warm_up_steps) / (max_steps - warm_up_steps) * math.pi))
+    elif lr_decay_method == "linear_decay":
+        _scheduler = lambda step: step / warm_up_steps if step <= warm_up_steps \
+                      else (1.0 - step / max_steps) if step <= max_steps else 1e-8
+    else:
+        # use polynomial decay
+        _scheduler = lambda step : step / warm_up_steps if step <= warm_up_steps \
+                      else (1-float(step)/max_steps)**(3) if step <= max_steps else 1e-8
+
     return lr_scheduler.LambdaLR(optimizer, lr_lambda=_scheduler)
+

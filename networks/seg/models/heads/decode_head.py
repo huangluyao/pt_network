@@ -72,7 +72,9 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
                      loss_weight=1.0),
                  ignore_label=None,
                  sampler=None,
-                 align_corners=False):
+                 align_corners=False,
+                 **kwargs
+                 ):
         super(BaseDecodeHead, self).__init__()
         self._init_inputs(in_channels, in_index, input_transform)
         self.head_width = head_width
