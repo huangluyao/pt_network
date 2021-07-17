@@ -1,0 +1,40 @@
+{
+    "__base__": [
+        "configs/seg/models/dla/dla_mobilenetv3.json",
+        "tools/config/augmentation/base_augmentation.json"
+    ],
+    "task": "segmentation",
+    "gpu_id": 0,
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.0001
+    },
+    "dataset": {
+        "input_size": [
+            224,
+            224
+        ],
+        "type": "LabelMeSegDataset",
+        "num_classes": 2,
+        "train_data_path": "D:\\datasets\\huangluyao\\segmentation\\df_new\\train",
+        "val_data_path": "D:\\datasets\\huangluyao\\segmentation\\df_new\\val",
+        "statistics_data": {
+            "means": [172.792, 126.686, 79.378],
+            "stds": [93.746, 110.626, 85.066]
+        }
+    },
+    "loader_cfg": {
+        "batch_size": 16
+    },
+    "scheduler": {
+        "warm_up_epochs": 5,
+        "max_epochs": 200,
+        "lr_decay_method": "polynomial_decay"
+    },
+    "model": {
+        "decode_head": {
+            "num_classes": 2
+        }
+    }
+}

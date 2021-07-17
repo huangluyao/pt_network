@@ -1,0 +1,22 @@
+{
+    "model": {
+        "type": "ImageClassifier",
+        "backbone": {
+            "type": "SwinTransformer",
+            "patch_size": 4,
+            "window_size": 7,
+            "embed_dim":96,
+            "depths":[2, 2, 6, 2],
+            "num_heads":[3, 6, 12, 24],
+            "pretrained": "",
+            "num_classes": null,
+            "ape": false,
+            "use_checkpoint": false,
+            "drop_path_rate": 0.3,
+            "mlp_ratio": 4.0,
+            "qkv_bias": true,
+            "qk_scale": null,
+            "out_indices": [0,1,2,3]
+        }
+    }
+}
