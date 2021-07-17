@@ -8,7 +8,8 @@
             "width_multiple": 0.50,
             "num_classes": null,
             "act_cfg": {"type": "SiLU"},
-            "norm_cfg":{"type":"BN", "requires_grad":false}
+            "norm_cfg":{"type":"BN", "requires_grad":false},
+            "out_levels": [2, 3, 4, 5]
         },
         "neck": {
             "type":"FPN",

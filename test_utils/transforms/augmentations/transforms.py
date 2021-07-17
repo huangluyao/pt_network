@@ -229,3 +229,4 @@ class RandomCrop(BasicTransform):
 
     def apply_to_bbox(self,bbox,rows, cols, h_start=0, w_start=0, **params):
         return bbox_random_crop(bbox, self.height, self.width, h_start, w_start, rows, cols)
+

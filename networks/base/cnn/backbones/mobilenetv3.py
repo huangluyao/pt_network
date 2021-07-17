@@ -8,33 +8,15 @@ from ...utils import load_checkpoint
 from ..utils import constant_init, kaiming_init
 from .builder import BACKBONES
 from ..components.blocks import InvertedResidual
-
-def _make_divisible(v, divisor, min_value=None):
-    """
-    This function is taken from the original tf repo.
-    It ensures that all layers have a channel number that is divisible by 8
-    It can be seen here:
-    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
-    :param v:
-    :param divisor:
-    :param min_value:
-    :return:
-    """
-    if min_value is None:
-        min_value = divisor
-    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-    # Make sure that round down does not go down by more than 10%.
-    if new_v < 0.9 * v:
-        new_v += divisor
-    return new_v
-
+from .utils import make_divisible
 
 @BACKBONES.register_module()
 class MobileNetV3(nn.Module):
 
-    def __init__(self, mode, input_channel, width_mult=1.,
+    def __init__(self, mode, input_channel=3, width_mult=1.,
                  out_levels=[2,3,4,5],
-                 norm_cfg=dict(type='BN2d'), num_classes=None):
+                 norm_cfg=dict(type='BN2d'),
+                 num_classes=None, **kwargs):
         super(MobileNetV3, self).__init__()
         assert mode in ['large', 'small'], "model is large or small"
 
@@ -71,7 +53,7 @@ class MobileNetV3(nn.Module):
                         [5,    6,  96, 1, 1, 1],
                         [5,    6,  96, 1, 1, 1]]
         self.num_classes = num_classes
-        mid_channel = _make_divisible(16 * width_mult, 8)
+        mid_channel = make_divisible(16 * width_mult, 8)
 
         h_swish_cfg = dict(type='HardSwish')
         self.conv = ConvModule(input_channel, mid_channel,3,2,1,act_cfg=h_swish_cfg, norm_cfg=norm_cfg)
@@ -83,8 +65,8 @@ class MobileNetV3(nn.Module):
 
         self.layer_names = []
         for i, (k, t, c, use_se, use_hs, s) in enumerate(self.cfgs):
-            output_channel = _make_divisible(c * width_mult, 8)
-            exp_size = _make_divisible(mid_channel * t, 8)
+            output_channel = make_divisible(c * width_mult, 8)
+            exp_size = make_divisible(mid_channel * t, 8)
 
             layer_name = f"layer_{i}"
             if use_hs:

@@ -90,7 +90,11 @@ class DSNet(nn.Module):
 
     def forward(self, x):
         outputs = []
+        if 0 in self.out_levels:
+            outputs.append(x)
         x = self.focus(x)
+        if 1 in self.out_levels:
+            outputs.append(x)
         for i, name in enumerate(self.stage_names):
             x = getattr(self, name)(x)
             if i + 2 in self.out_levels:

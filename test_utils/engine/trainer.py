@@ -25,16 +25,6 @@ class Trainer:
         self._task = cfg['task']
         self.input_size = cfg['dataset'].pop('input_size')
 
-        # init model
-        self.model = self.build_model(cfg)
-        self.optimizer = build_optimizer(self.model, cfg['optimizer'])
-        self.scheduler = build_scheduler(self.optimizer, cfg['scheduler'])
-
-        self.max_epochs = cfg['scheduler']['max_epochs']
-        self._device, gpu_ids = self.get_device(gpu_id=cfg.get('gpu_id', 0))
-        self.model = self.model.to(self._device)
-        self.logger.info('model info:')
-        self.logger.info(model_info(self.model, self.input_size))
 
         # statistics data info
         self.logger.info('statistics_data:')
@@ -51,6 +41,16 @@ class Trainer:
         # build loader
         self.train_data_loader, self.val_data_loader = build_data_loader(self._task, loader_cfg=cfg['loader_cfg'], **cfg['dataset'])
         # self.logger.info(self.train_data_loader.dataset.class_names)
+        # init model
+        self.model = self.build_model(cfg, len(self.train_data_loader.dataset.class_names))
+        self.optimizer = build_optimizer(self.model, cfg['optimizer'])
+        self.scheduler = build_scheduler(self.optimizer, cfg['scheduler'])
+
+        self.max_epochs = cfg['scheduler']['max_epochs']
+        self._device, gpu_ids = self.get_device(gpu_id=cfg.get('gpu_id', 0))
+        self.model = self.model.to(self._device)
+        self.logger.info('model info:')
+        self.logger.info(model_info(self.model, self.input_size))
 
         self._checkpoint_dir = os.path.join(cfg['output_dir'], 'checkpoints')
         if not os.path.exists(self._checkpoint_dir):
@@ -59,7 +59,7 @@ class Trainer:
         self.performance_dir = os.path.join(cfg['output_dir'], 'performance')
         self._evaluator = Evaluator(self._task, model_name=model_name,
                                     logger=logger,
-                                    num_classes=cfg["dataset"]["num_classes"],
+                                    num_classes=len(self.train_data_loader.dataset.class_names),
                                     class_names=self.train_data_loader.dataset.class_names,
                                     performance_dir=self.performance_dir
                                     )
@@ -99,7 +99,7 @@ class Trainer:
             self.vis_score_threshold = None
 
             pass
-    def build_model(self, cfg):
+    def build_model(self, cfg, num_classes):
         model_cfg = cfg.get('model')
         number_classes_model ={"classification":"backbone",
                                "detection":"bbox_head",
@@ -107,7 +107,7 @@ class Trainer:
                                }
         num_classes_cfg = model_cfg.get(number_classes_model[cfg.get("task")], None)
         if num_classes_cfg:
-            num_classes_cfg.update(dict(num_classes=cfg['dataset']['num_classes']))
+            num_classes_cfg.update(dict(num_classes=num_classes))
         if cfg.get('task') == "classification":
             model = build_classifier(model_cfg)
         elif cfg.get('task') == "detection":

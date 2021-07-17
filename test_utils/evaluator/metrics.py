@@ -240,11 +240,10 @@ def model_info(model, img_size=640):
         import torch
         from thop import profile
         from copy import deepcopy
-        stride = 32
-        img = torch.zeros((1, 3, stride, stride), device=next(model.parameters()).device)  # input
-        flops = profile(deepcopy(model), inputs=(img,), verbose=False)[0] / 1E9 * 2  # stride GFLOPS
         img_size = img_size if isinstance(img_size, list) else [img_size, img_size]  # expand if int/float
-        fs = ', %.1f GFLOPS' % (flops * img_size[0] / stride * img_size[1] / stride)  # 640x640 GFLOPS
+        img = torch.zeros((1, 3, img_size[0], img_size[1]), device=next(model.parameters()).device)  # input
+        flops = profile(deepcopy(model), inputs=(img,), verbose=False)[0] / 1E9 * 2  # stride GFLOPS
+        fs = ', %.1f GFLOPS' % (flops)
     except (ImportError, Exception):
         fs = ''
 

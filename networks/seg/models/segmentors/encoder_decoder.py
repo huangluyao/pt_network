@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from base.cnn import resize
-
 from .base import BaseSegmentor
 from .. import builder
 from ..builder import SEGMENTORS

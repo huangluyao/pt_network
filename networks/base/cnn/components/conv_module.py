@@ -92,7 +92,9 @@ class ConvModule(nn.Module):
                  inplace=True,
                  with_spectral_norm=False,
                  padding_mode='zeros',
-                 order=('conv', 'norm', 'act'), **kwargs):
+                 order=('conv', 'norm', 'act'),
+                 shortcut=False,
+                 **kwargs):
         super(ConvModule, self).__init__()
         assert conv_cfg is None or isinstance(conv_cfg, dict)
         assert norm_cfg is None or isinstance(norm_cfg, dict)
@@ -141,7 +143,7 @@ class ConvModule(nn.Module):
         self.transposed = self.conv.transposed
         self.output_padding = self.conv.output_padding
         self.groups = self.conv.groups
-
+        self.shortcut = shortcut
         if self.with_spectral_norm:
             self.conv = nn.utils.spectral_norm(self.conv)
 
@@ -180,6 +182,8 @@ class ConvModule(nn.Module):
             constant_init(self.norm, 1, bias=0)
 
     def forward(self, x, activate=True, norm=True):
+        if self.shortcut:
+            temp = x
         for layer in self.order:
             if layer == 'conv':
                 if self.with_explicit_padding:
@@ -189,7 +193,8 @@ class ConvModule(nn.Module):
                 x = self.norm(x)
             elif layer == 'act' and activate and self.with_activation:
                 x = self.activate(x)
-        return x
+
+        return x+temp if self.shortcut else x
 
 
 class DepthwiseSeparableConvModule(nn.Module):
