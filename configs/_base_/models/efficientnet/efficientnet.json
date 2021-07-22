@@ -1,0 +1,17 @@
+{
+    "pretrained": "",
+    "model": {
+        "type": "ImageClassifier",
+        "backbone": {
+            "type": "EfficientNet",
+            "depth": 18,
+            "out_levels": [5],
+            "num_classes": 1000
+        },
+        "head": {
+            "type": "ClsHead",
+            "loss": {"type": "CrossEntropyLoss"},
+            "metric": {"type": "Accuracy", "topk": [1, 5]}
+        }
+    }
+}

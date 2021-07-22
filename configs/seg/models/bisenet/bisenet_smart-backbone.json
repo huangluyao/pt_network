@@ -1,0 +1,19 @@
+{
+    "_base_": "../../../_base_/models/bisenet/bisenet.json",
+    "pretrained": "model_zoo/pth/backbone/smart/smart.pth",
+    "model": {
+        "backbone": {
+            "type": "DSNet",
+            "depth_multiple": 0.33,
+            "width_multiple": 0.50,
+            "num_classes": null,
+            "act_cfg": {"type": "SiLU"},
+            "norm_cfg":{"type":"BN", "requires_grad":false},
+            "in_channels": 3,
+            "out_levels": [0, 4, 5]
+        },
+        "decode_head": {
+            "in_channels": [3,256, 512]
+        }
+    }
+}

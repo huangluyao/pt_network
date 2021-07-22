@@ -6,7 +6,7 @@ import cv2
 import json
 
 import numpy as np
-from .BaseDetectionDataset import BaseDataset
+from test_utils.datasets.detection_dataset.BaseDetectionDataset import BaseDataset
 from test_utils.datasets import DATASET
 
 
@@ -72,3 +72,24 @@ class DetectionDataset(BaseDataset):
 
         return image_infos
 
+
+if __name__=="__main__":
+    data_path = "D:\\datasets\\huangluyao\\detection\\plane_car\\train"
+    json_path = "tools/config/augmentation/base_augmentation.json"
+    with open(json_path, 'r') as f:
+        cfg = json.load(f)
+    test = DetectionDataset(data_path, cfg["dataset"]["augmentations"], "train")
+
+    std = np.array([0.229,0.224,0.225])
+    mean =np.array([0.485,0.456,0.406])
+
+    for image, label in test:
+        image = np.transpose(image, [1, 2, 0])
+        image = image*std +mean
+
+        for boxes, index in zip(label["bboxes"], label["label_index"]):
+            x1, y1, x2, y2 = [int(x) for x in boxes]
+            cv2.rectangle(image,(x1, y1), (x2,y2),(0,255,0))
+
+        cv2.imshow("result", image.astype(np.uint8))
+        cv2.waitKey()

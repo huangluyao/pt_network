@@ -10,28 +10,25 @@ from .functional import *
 
 @TRANSFORM.registry()
 class Resize(BasicTransform):
-    def __init__(self, height, width, interpolation=cv2.INTER_LINEAR, prob=1, always_apply=False):
+    def __init__(self, height, width, interpolation=cv2.INTER_LINEAR, padding=True, prob=1, always_apply=False):
         super(Resize, self).__init__(always_apply, prob)
         self.height = height
         self.width = width
         self.interpolation = interpolation
+        self.padding = padding
 
     def apply(self, img, **params):
-        return resize(img, self.height, self.width, self.interpolation)
+        return padding_resize(img, (self.height, self.width)) if self.padding else \
+               resize(img, self.height, self.width, self.interpolation)
 
     def apply_to_bbox(self, bbox, **params):
-        height = params["rows"]
-        width = params["cols"]
-        scale_x = self.width / width
-        scale_y = self.height / height
-        (x_min, y_min, x_max, y_max), tail = bbox[:4], tuple(bbox[4:])
-
-        x_min, x_max = x_min * scale_x, x_max * scale_x
-        y_min, y_max = y_min * scale_y, y_max * scale_y
-        return (x_min, y_min, x_max, y_max) + tail
+        org_size = (params["rows"], params["cols"])
+        return padding_resize_box(bbox, org_size, (self.height, self.width)) if self.padding else \
+                resize_box(bbox, org_size, (self.height, self.width))
 
     def apply_to_mask(self, img, **params):
-        return resize(img, self.height, self.width, self.interpolation)
+        return padding_resize_mask(img, (self.height, self.width)) if self.padding else \
+            resize(img, self.height, self.width, self.interpolation)
 
     def get_params(self, **params):
         return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}
@@ -96,8 +93,6 @@ class Rotate(BasicTransform):
 
     def apply_to_mask(self, img, angle=0, interpolation=cv2.INTER_LINEAR, **params):
         return rotate(img, angle, interpolation, self.border_mode, self.value)
-
-
 
 @TRANSFORM.registry()
 class Normalize(BasicTransform):
@@ -179,7 +174,9 @@ class MultiplicativeNoise(BasicTransform):
         super(MultiplicativeNoise, self).__init__(**kwargs)
 
         if isinstance(multiplier, (int, float)):
-            multiplier = -multiplier, +multiplier
+            self.multiplier = -multiplier, +multiplier
+        else:
+            self.multiplier = multiplier
         self.per_channel = per_channel
 
     def apply(self, img, multiplier=np.array([1]), **params):
@@ -230,3 +227,40 @@ class RandomCrop(BasicTransform):
     def apply_to_bbox(self,bbox,rows, cols, h_start=0, w_start=0, **params):
         return bbox_random_crop(bbox, self.height, self.width, h_start, w_start, rows, cols)
 
+@TRANSFORM.registry()
+class GaussNoise(BasicTransform):
+    def __init__(self,var_limit=(10.0, 50.0), mean=0, **kwargs):
+        super(GaussNoise, self).__init__(**kwargs)
+        if isinstance(var_limit, (tuple, list)):
+            if var_limit[0] < 0:
+                raise ValueError("Lower var_limit should be non negative.")
+            if var_limit[1] < 0:
+                raise ValueError("Upper var_limit should be non negative.")
+            self.var_limit = var_limit
+        elif isinstance(var_limit, (int, float)):
+            if var_limit < 0:
+                raise ValueError("var_limit should be non negative.")
+
+            self.var_limit = (0, var_limit)
+        else:
+            raise TypeError(
+                "Expected var_limit type to be one of (int, float, tuple, list), got {}".format(type(var_limit))
+            )
+
+        self.mean = mean
+
+    def apply(self, img, gauss=None, **params):
+        return gauss_noise(img, gauss=gauss)
+
+    def get_params(self, **params):
+        image = params["image"]
+        var = random.uniform(self.var_limit[0], self.var_limit[1])
+        sigma = var ** 0.5
+        random_state = np.random.RandomState(random.randint(0, 2 ** 32 - 1))
+
+        gauss = random_state.normal(self.mean, sigma, image.shape)
+        return {"gauss": gauss}
+
+    @property
+    def targets(self):
+        return {"image": self.apply} # image only transform

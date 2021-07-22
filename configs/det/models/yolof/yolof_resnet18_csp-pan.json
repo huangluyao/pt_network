@@ -1,0 +1,30 @@
+{
+    "_base_": "../../../_base_/models/yolof/yolof.json",
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "model": {
+        "type": "YOLOF",
+        "backbone": {
+            "type": "ResNet",
+            "depth": 18,
+            "num_stages": 4,
+            "frozen_stages": 1,
+            "norm_cfg": {
+                "type": "BN",
+                "requires_grad": false
+            },
+            "norm_eval": true,
+            "out_levels": [3, 4, 5]
+
+        },
+        "neck": {
+            "type": "CSP_PAN",
+            "input_channels": [128, 256, 512],
+            "output_channels": [128, 256, 512],
+            "start_level":3,
+            "end_level":3,
+            "strides": [8, 16, 32],
+            "act_cfg": {"type": "SiLU"},
+            "norm_cfg":{"type":"BN", "requires_grad":false}
+        }
+    }
+}

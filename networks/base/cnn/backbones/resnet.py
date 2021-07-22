@@ -180,7 +180,8 @@ class ResNet(nn.Module):
                  multi_grid=None,
                  contract_dilation=False,
                  with_cp=False,
-                 zero_init_residual=True):
+                 zero_init_residual=True,
+                 **kwargs):
         super(ResNet, self).__init__()
         if depth not in self.arch_settings:
             raise KeyError(f'invalid depth {depth} for resnet')

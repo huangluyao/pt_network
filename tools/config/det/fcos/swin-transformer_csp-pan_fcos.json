@@ -1,0 +1,5 @@
+{
+    "__base__": ["configs/det/models/FCOS/FCOS_swin-transformer_csp-pan.json",
+        "tools/config/augmentation/base_augmentation.json", "tools/config/train_config/base.json"],
+    "task": "detection"
+}

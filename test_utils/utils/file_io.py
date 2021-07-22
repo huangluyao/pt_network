@@ -66,7 +66,8 @@ def _file2dict(filename):
 
         base_cfg_dict = dict()
         for _cfg_dict in cfg_dict_list:
-            base_cfg_dict.update(_cfg_dict)
+            # base_cfg_dict.update(_cfg_dict)
+            base_cfg_dict = _merge_a_into_b(base_cfg_dict, _cfg_dict)
 
         base_cfg_dict = _merge_a_into_b(cfg_dict, base_cfg_dict)
         cfg_dict = base_cfg_dict

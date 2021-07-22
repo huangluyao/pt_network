@@ -121,6 +121,7 @@ class Trainer:
         if os.path.exists(checkpoint_path):
             checkpoint_path = os.path.expanduser(checkpoint_path)
             load_checkpoint(model, checkpoint_path, map_location='cpu', strict=True)
+            self.logger.info(f"load checkpoint from {checkpoint_path}")
         return model
 
     def train(self):
@@ -184,7 +185,8 @@ class Trainer:
                         self._val_img_paths, self._val_pred,
                         vis_predictions_dir=self._vis_predictions_dir
                     )
-
+        best_metric = self._evaluator.get_best_metric()
+        self.logger.info(f"the best metric is {best_metric}")
         self.logger.info('epoch end ')
 
     def _validate_fs(self):
@@ -331,6 +333,8 @@ class Trainer:
                     if "Normalize" == augmentation.get('type', None):
                         augmentation.update(dict(mean=self.means, std=self.stds))
                     elif "Resize" == augmentation.get('type', None) and self.input_size is not None:
+                        augmentation.update(dict(width=self.input_size[0], height=self.input_size[1]))
+                    elif "RandomCrop" == augmentation.get('type', None) and self.input_size is not None:
                         augmentation.update(dict(width=self.input_size[0], height=self.input_size[1]))
         elif isinstance(pipelines, dict):
             for k, v in pipelines.items():

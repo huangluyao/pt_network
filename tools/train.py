@@ -15,15 +15,7 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        # default='tools/config/det/fcos/fcos_resnet18_caiqiebuliang.json',
-                        # default='tools/config/det/fcos/fcos_resnet18_voc.json',
-                        # default='tools/config/det/fcos/fcos_resnet18_finetune.json',
-                        # default='tools/config/det/yolof/yolof_resnet18_caiqiebuliang_finetune.json',
-                        # default='tools/config/det/yolof/yolof_resnet18_voc.json',
-                        default="tools/config/det/fcos/fcos_resnet18_csp-pan_caiqiebuliang.json",
-                        # default="tools/config/seg/caiqiebuliang_unet_resnet18.json",
-                        # default= "tools/config/seg/caiqiebuliang_unet_mobilenetv3.json",
-                        # default= "tools/config/cls/mobilnetv3_imagenet20.json",
+                        default="tools/config/det/yolof/smart-backbone_yolof.json",
                         type=str)
     parser.add_argument('-p','--pretrained', type=str, default='', help='initial weights path')
 
@@ -33,6 +25,7 @@ def setup():
     cfg = fromfile(cfg)
     if len(args.pretrained):
         cfg.update(dict(pretrained=args.pretrained))
+
     logger = setup_logger(cfg)
 
     def show_config_values(config, prefix='  '):

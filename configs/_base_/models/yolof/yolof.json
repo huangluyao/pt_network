@@ -1,0 +1,72 @@
+{
+    "model": {
+        "type": "YOLOF",
+        "bbox_head": {
+            "type": "YOLOFHead",
+            "num_classes": 1,
+            "in_channels": 512,
+            "reg_decoded_bbox": true,
+            "anchor_generator": {
+                "type": "AnchorGenerator",
+                "ratios": [
+                    1.0
+                ],
+                "scales": [
+                    1,
+                    2,
+                    4,
+                    8,
+                    16
+                ],
+                "strides": [
+                    32
+                ]
+            },
+            "bbox_coder": {
+                "type": "DeltaXYWHBBoxCoder",
+                "target_means": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "target_stds": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "add_ctr_clamp": true,
+                "ctr_clamp": 32
+            },
+            "loss_cls": {
+                "type": "FocalLoss",
+                "gamma": 2.0,
+                "alpha": 0.25,
+                "loss_weight": 1.0,
+                "use_sigmoid": true
+            },
+            "loss_bbox": {
+                "type": "GIoULoss",
+                "loss_weight": 1.0
+            }
+        },
+        "train_cfg": {
+            "score_thr": 0.3,
+            "nms": 0.3,
+            "max_per_img": 100,
+            "assigner": {
+                "type": "UniformAssigner",
+                "pos_ignore_thr": 0.15,
+                "neg_ignore_thr": 0.7
+            },
+            "allowed_border": -1,
+            "pos_weight": -1
+        },
+        "test_cfg": {
+            "score_thr": 0.3,
+            "nms": 0.3,
+            "max_per_img": 100
+        }
+    }
+}

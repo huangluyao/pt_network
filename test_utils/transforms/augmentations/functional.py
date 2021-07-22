@@ -3,7 +3,7 @@
 # @date 2021/6/10 下午5:45
 import cv2
 import numpy as np
-from ..utils import preserve_channel_dim, preserve_shape
+from ..utils import preserve_channel_dim, preserve_shape, preserve_mask_channel_dim
 from ..utils import is_grayscale_image, is_rgb_image, clip
 
 MAX_VALUES_BY_DTYPE = {
@@ -20,6 +20,17 @@ def resize(img, height, width, interpolation=cv2.INTER_LINEAR):
         return img
     img = cv2.resize(img, dsize=(width, height), interpolation=interpolation)
     return img
+
+
+def resize_box(bbox, org_size, resize):
+    resize_h, resize_w = resize
+    height, width = org_size
+    scale_x = resize_w / width
+    scale_y = resize_h / height
+    (x_min, y_min, x_max, y_max), tail = bbox[:4], tuple(bbox[4:])
+    x_min, x_max = x_min * scale_x, x_max * scale_x
+    y_min, y_max = y_min * scale_y, y_max * scale_y
+    return (x_min, y_min, x_max, y_max) + tail
 
 
 @preserve_shape
@@ -317,3 +328,53 @@ def crop_bbox_by_coords(bbox,  crop_coords):
     x1, y1, _, _ = crop_coords
     cropped_bbox = x_min - x1, y_min - y1, x_max - x1, y_max - y1
     return cropped_bbox
+
+def gauss_noise(image, gauss):
+    dtype = image.dtype
+    image = image.astype("float32")
+    image = image + gauss
+    maxval = MAX_VALUES_BY_DTYPE.get(dtype, 1.0)
+    return np.clip(image, 0, maxval).astype(dtype)
+
+@preserve_channel_dim
+def padding_resize(image, size):
+    resize_h, resize_w = size
+    img_h, img_w, im_c = image.shape
+    resize_ratio = min(resize_w/ img_w, resize_h/img_h)
+    new_w = round(img_w*resize_ratio)
+    new_h = round(img_h*resize_ratio)
+
+    img_resized = cv2.resize(image, (new_w, new_h))
+
+    img_padding = np.full([resize_h, resize_w, im_c], 0).astype(image.dtype)
+    img_padding[(resize_h - new_h) // 2:(resize_h - new_h) // 2 + new_h,
+    (resize_w - new_w) // 2:(resize_w - new_w) // 2 + new_w, :] = img_resized
+    return img_padding
+
+
+@preserve_mask_channel_dim
+def padding_resize_mask(mask, size):
+    resize_h, resize_w = size
+    img_h, img_w, c = mask.shape
+    resize_ratio = min(resize_w/ img_w, resize_h/img_h)
+    new_w = round(img_w*resize_ratio)
+    new_h = round(img_h*resize_ratio)
+    mask_resized = cv2.resize(mask, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
+    mask_padding = np.full([resize_h, resize_w, c], 0).astype(mask.dtype)
+    mask_padding[(resize_h-new_h)//2:(resize_h-new_h)//2 + new_h, (resize_w-new_w)//2:(resize_w-new_w)//2 + new_w] = mask_resized
+
+    return mask_padding
+
+
+def padding_resize_box(boxes, org_size , size):
+    resize_h, resize_w = size
+    im_h, im_w = org_size
+    resize_ratio = min(resize_w / im_w, resize_h / im_h)
+    new_w = round(im_w * resize_ratio)
+    new_h = round(im_h * resize_ratio)
+    del_h = (resize_h - new_h)/2
+    del_w = (resize_w - new_w)/2
+    boxes = list(boxes)
+    boxes[:4] = [x * resize_ratio+del_w if i%2==0 else x * resize_ratio+del_h for i, x in enumerate(boxes[:4])]
+
+    return tuple(boxes)

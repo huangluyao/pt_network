@@ -1,0 +1,6 @@
+{
+    "__base__": ["configs/det/models/yolof/yolof_resnet18_csp-pan.json",
+                 "tools/config/augmentation/base_augmentation.json",
+                 "tools/config/train_config/base.json"],
+    "task": "detection"
+}

@@ -422,7 +422,8 @@ class SwinTransformer(nn.Module):
                  **kwargs
                  ):
         super().__init__()
-
+        if 1 in out_levels:
+            raise ValueError("1 can not in out_levels list")
         self.pretrain_img_size = pretrain_img_size
         self.num_layers = len(depths)
         self.embed_dim = embed_dim
@@ -474,7 +475,7 @@ class SwinTransformer(nn.Module):
 
         # add a norm layer for each output
         for i_layer in out_levels:
-            layer = norm_layer(num_features[i_layer])
+            layer = norm_layer(num_features[i_layer-2])
             layer_name = f'norm{i_layer}'
             self.add_module(layer_name, layer)
 
@@ -523,6 +524,7 @@ class SwinTransformer(nn.Module):
 
     def forward(self, x):
         """Forward function."""
+        outs = [x] if 0 in self.out_levels else []
         x = self.patch_embed(x)
 
         Wh, Ww = x.size(2), x.size(3)
@@ -533,14 +535,12 @@ class SwinTransformer(nn.Module):
         else:
             x = x.flatten(2).transpose(1, 2)
         x = self.pos_drop(x)
-
-        outs = []
         for i in range(self.num_layers):
             layer = self.layers[i]
             x_out, H, W, x, Wh, Ww = layer(x, Wh, Ww)
 
-            if i in self.out_levels:
-                norm_layer = getattr(self, f'norm{i}')
+            if i+2 in self.out_levels:
+                norm_layer = getattr(self, f'norm{i+2}')
                 x_out = norm_layer(x_out)
 
                 out = x_out.view(-1, H, W, self.num_features[i]).permute(0, 3, 1, 2).contiguous()

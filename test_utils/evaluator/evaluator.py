@@ -362,6 +362,23 @@ class Evaluator:
         else:
             return False
 
+    def get_best_metric(self):
+        if self._task == 'detection':
+            major_metrics = self._ap_per_epoch
+            mean_metrics = [sum(x)/len(x) for x in major_metrics]
+            best_metric = max(mean_metrics)
+        else:
+            if self._num_classes == 1:
+                best_metric = max(self._best_f1_per_epoch)
+            else:
+                if self._task == 'classification':
+                    major_metrics = self._f1_per_epoch
+                else:
+                    major_metrics = self._iou_per_epoch
+                mean_metrics = [sum(x)/len(x) for x in major_metrics]
+                best_metric = max(mean_metrics)
+        return best_metric
+
     def _record_cur_epoch_det(self, learning_rate,
                                 avg_loss,
                                 y_prob,

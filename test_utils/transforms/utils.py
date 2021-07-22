@@ -12,6 +12,8 @@ MAX_VALUES_BY_DTYPE = {
     np.dtype("float32"): 1.0,
 }
 
+import numpy as np
+
 
 def preserve_channel_dim(func):
     """
@@ -23,6 +25,19 @@ def preserve_channel_dim(func):
         result = func(img, *args, **kwargs)
         if len(shape) == 3 and shape[-1] == 1 and len(result.shape) == 2:
             result = np.expand_dims(result, axis=-1)
+        return result
+
+    return wrapped_function
+
+def preserve_mask_channel_dim(func):
+    def wrapped_function(img, *args, **kwargs):
+        shape = img.shape
+        if len(shape) == 2:
+            img = np.expand_dims(img, axis=-1)
+            result = func(img, *args, **kwargs)
+            result = np.squeeze(result)
+        else:
+            result = func(img, *args, **kwargs)
         return result
 
     return wrapped_function

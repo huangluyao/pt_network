@@ -1,0 +1,5 @@
+{
+    "__base__": ["configs/det/models/FCOS/FCOS_smart-backbone_fpn.json",
+                "tools/config/augmentation/base_augmentation.json", "tools/config/train_config/base.json"],
+    "task": "detection"
+}

@@ -12,9 +12,22 @@ class CSP_PAN(nn.Module):
     def __init__(self,
                  input_channels,
                  output_channels,
-                 use_trans_conv=False, **kwargs):
+                 use_trans_conv=False,
+                 start_level=1,
+                 end_level=-1,
+                 **kwargs):
 
         super(CSP_PAN, self).__init__()
+
+        assert start_level > 0, "start level must larger than 0"
+        if end_level == -1:
+            self.backbone_end_level = len(input_channels)
+            assert start_level<=self.backbone_end_level, "start_level must smaller or equal than end_level"
+        else:
+            self.backbone_end_level = end_level
+            assert end_level<=len(input_channels), "start_level must smaller or equal output_channels"
+
+        self.start_level = start_level
 
         self.n = len(input_channels) - len(output_channels)
         assert self.n >= 0, ' number of input channels from backbone should larger than number of levles'
@@ -45,7 +58,8 @@ class CSP_PAN(nn.Module):
             self.add_module(f'C3_down{i}',C3(out_channel+out_channel, in_channel, shortcut=False, **kwargs))
 
         self.out_convs = nn.ModuleList(ConvModule(ic, oc, kernel_size=1, stride=1, padding=0, **kwargs)
-                                       for ic, oc in zip(input_channels, output_channels))
+                                       for ic, oc in zip(input_channels[self.start_level-1:self.backbone_end_level],
+                                                         output_channels[self.start_level-1:self.backbone_end_level]))
 
 
 
@@ -66,7 +80,7 @@ class CSP_PAN(nn.Module):
             tmp = torch.cat([tmp, features[-i-1]], dim=1)
             tmp = getattr(self, f'C3_up{i}')(tmp)
 
-        if self.n == 0:
+        if self.n == 0 and self.start_level==1:
             outs.append(tmp)
 
         # down sample
@@ -75,7 +89,7 @@ class CSP_PAN(nn.Module):
             tmp = getattr(self, f'conv_down{index}')(tmp)
             tmp = torch.cat([tmp, x], dim=1)
             tmp = getattr(self, f'C3_down{index}')(tmp)
-            if i+1 < len(self.output_channels):
+            if i < self.backbone_end_level-1 and i >= self.start_level-2:
                 outs.append(tmp)
 
         outs = [out_conv(out) for out, out_conv in zip(outs, self.out_convs)]

@@ -34,9 +34,8 @@ class Visualizer:
         for idx in range(num_preds):
             ori_image = cv2.imread(img_paths[idx])
             ori_size = ori_image.shape[:2]
-            image = cv2.resize(ori_image, (self._input_size[1], self._input_size[0]))
             boxes = predictions[idx]
-            image, boxes[:, 0:4] = resize_box(image, boxes[:, 0:4], ori_size)
+            boxes = resize_box(ori_size , (self._input_size[1], self._input_size[0]), boxes)
             vis_result = show_detections(ori_image, boxes, self._class_names, self._vis_score_threshold)
             cv2.imwrite(vis_paths[idx], vis_result)
 
@@ -68,23 +67,22 @@ class Visualizer:
 
 
 
-def resize_box(image, boxes, size):
-    resize_h, resize_w = size
-    im_h, im_w, im_c = image.shape
-    resize_ratio = min(resize_w / im_w, resize_h / im_h)
+def resize_box(org_size, inptut_size, boxes):
+    input_h, input_w = inptut_size
+    im_h, im_w = org_size
+    resize_ratio = min(input_w / im_w, input_h / im_h)
     new_w = round(im_w * resize_ratio)
     new_h = round(im_h * resize_ratio)
-    im_resized = cv2.resize(image, (new_w, new_h))
-    im_padding = np.full([resize_h, resize_w, im_c], 0)
-    im_padding[(resize_h-new_h)//2:(resize_h-new_h)//2 + new_h, (resize_w-new_w)//2:(resize_w-new_w)//2 + new_w,  :] = im_resized
 
-    boxes[:, :4] *= resize_ratio
-    del_h = (resize_h - new_h)/2
-    del_w = (resize_w - new_w)/2
-    add_matrix = np.array([[del_w, del_h, del_w, del_h]]).astype(int)
-    boxes[:, :4] += add_matrix
+    del_h = (input_h - new_h)/2
+    del_w = (input_w - new_w)/2
+    boxes = boxes[(boxes[:,2]>0) * (boxes[:,3] > 0)]
 
-    return im_padding, boxes
+    boxes[:,0:4:2] = boxes[:,0:4:2] - del_w
+    boxes[:,1:4:2] = boxes[:,1:4:2] - del_h
+    boxes[:,:4] /= resize_ratio
+
+    return boxes
 
 
 def resize_mask(image, mask, size):
@@ -99,7 +97,8 @@ def resize_mask(image, mask, size):
     im_padding[(resize_h-new_h)//2:(resize_h-new_h)//2 + new_h, (resize_w-new_w)//2:(resize_w-new_w)//2 + new_w,  :] = im_resized
     mask_padding = np.full([resize_h, resize_w], 0)
     mask_padding[(resize_h-new_h)//2:(resize_h-new_h)//2 + new_h, (resize_w-new_w)//2:(resize_w-new_w)//2 + new_w] = mask_resized
-
+    # im_padding = cv2.resize(image, (resize_w, resize_h))
+    # mask_padding = cv2.resize(mask, (resize_w, resize_h), interpolation=cv2.INTER_NEAREST)
     return im_padding, mask_padding
 
 
