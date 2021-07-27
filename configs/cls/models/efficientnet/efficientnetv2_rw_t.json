@@ -1,12 +1,10 @@
 {
-    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "pretrained": "model_zoo/pth/backbone/efficientnet/efficientnetv2_rw_t.pth",
     "model": {
         "type": "ImageClassifier",
         "backbone": {
-            "type": "ResNet",
-            "depth": 18,
-            "out_levels": [5],
-            "num_classes": 1000
+            "type": "EfficientNetv2_tiny",
+            "out_levels": [5]
         },
         "head": {
             "type": "ClsHead",

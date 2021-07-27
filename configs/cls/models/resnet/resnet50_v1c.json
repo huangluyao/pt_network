@@ -1,10 +1,10 @@
 {
-    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "pretrained": "nas://model_zoo/pth/gluoncv/ResNet50_v1c.pth",
     "model": {
         "type": "ImageClassifier",
         "backbone": {
-            "type": "ResNet",
-            "depth": 18,
+            "type": "ResNetV1c",
+            "depth": 50,
             "out_levels": [5],
             "num_classes": 1000
         },

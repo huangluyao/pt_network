@@ -16,8 +16,8 @@
         "val_data_path": "D:\\datasets\\huangluyao\\detection\\plane_car/val"
     },
     "loader_cfg": {
-        "batch_size": 8,
-        "num_workers": 8
+        "batch_size": 2,
+        "num_workers": 0
     },
     "scheduler": {
         "warm_up_epochs": 5,
