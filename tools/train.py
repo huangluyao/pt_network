@@ -15,9 +15,11 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default="tools/config/det/yolof/smart-backbone_yolof.json",
+                        default="tools/config/det/fcos/efficientv2-tiny_csp-pan_fcos.json",
                         type=str)
-    parser.add_argument('-p','--pretrained', type=str, default='', help='initial weights path')
+    parser.add_argument('-p','--pretrained', type=str,
+                        default='',
+                        help='initial weights path')
 
     args = parser.parse_args()
 

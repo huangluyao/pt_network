@@ -16,13 +16,31 @@ class Visualizer:
         self._vis_score_threshold = vis_score_threshold
 
         if self._task == 'classification':
-            self.visualize = None
+            self.visualize = self._visualize_cls
         elif self._task == 'segmentation':
             self.visualize = self._visualize_seg
         elif self._task == 'detection':
             self.visualize = self._visualize_det
         else:
             raise ValueError('Not support task %s' %self._task)
+
+    def _visualize_cls(self, img_paths, predictions, vis_predictions_dir):
+        num_preds = len(img_paths)
+        if not os.path.exists(vis_predictions_dir):
+            os.makedirs(vis_predictions_dir)
+        vis_paths = [os.path.join(vis_predictions_dir, 'pred_%03d.png'%(idx)) for idx in range(num_preds)]
+        for idx in range(num_preds):
+            ori_image = cv2.imread(img_paths[idx])
+            index = np.argmax(predictions[idx])
+            result_txt = "%s: %.4f" % (self._class_names[index], predictions[idx][index])
+
+            ((text_width, text_height), _) = cv2.getTextSize(result_txt, cv2.FONT_HERSHEY_SIMPLEX, 1, 1)
+            cv2.putText(ori_image, result_txt, (10, text_height+10),
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=1,
+                        color=(0, 255, 0))
+
+            cv2.imwrite(vis_paths[idx], ori_image)
 
     def _visualize_det(self, img_paths, predictions, vis_predictions_dir, image_names=None):
         num_preds = len(img_paths)
@@ -111,8 +129,8 @@ def show_detections(image, detections, class_names, score_threshold=None):
     class_ids = class_ids[class_ids>0].astype(np.int32)
     if len(class_ids)==0:
         return image
-    bgr_values = get_BGR_values(len(class_ids))
-    class_color_dict = dict(zip(class_ids, bgr_values))
+    bgr_values = get_BGR_values(len(class_names))
+    # class_color_dict = dict(zip(class_ids, bgr_values))
 
     img_to_draw = image.copy()
     num_boxes = detections.shape[0]
@@ -127,7 +145,7 @@ def show_detections(image, detections, class_names, score_threshold=None):
             img_to_draw,
             (box[0], box[1]),
             (box[2], box[3]),
-            class_color_dict[class_id],
+            bgr_values[class_id-1],
             2
         )
 
@@ -141,7 +159,7 @@ def show_detections(image, detections, class_names, score_threshold=None):
             org=(x_min, y_min - int(0.3 * text_height)),
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.35,
-            color=class_color_dict[class_id],
+            color=bgr_values[class_id-1],
             lineType=cv2.LINE_AA,
         )
     return img_to_draw

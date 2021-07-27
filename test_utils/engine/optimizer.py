@@ -34,7 +34,7 @@ class CosineDecayRestart:
 
     def __call__(self, step):
         if step < self.warm_up_steps:
-            return step / self.warm_up_steps
+            return step / self.warm_up_steps if not step else 0.1
         elif step - self.warm_up_steps > self.cycle_epoch * self.cycle_times:
             self.cycle_times += 1
             if self.cycle_times % 2 == 0:
@@ -55,7 +55,7 @@ class PolynomialDecay:
 
     def __call__(self, step):
         if step < self.warm_up_steps:
-            return step / self.warm_up_steps
+            return step / self.warm_up_steps if not step else 0.1
         elif step - self.warm_up_steps > self.cycle_epoch * self.cycle_times:
             self.cycle_times += 1
             self.decay_step += self.cycle_epoch

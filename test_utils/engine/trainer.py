@@ -4,7 +4,7 @@
 import time
 import os
 
-import cv2
+import json
 import numpy as np
 import torch.utils.data
 from networks.cls import build_classifier
@@ -17,6 +17,7 @@ from ..datasets import build_dataset, statistics_data
 from ..evaluator import Evaluator, Visualizer, model_info
 from ..utils.checkpoint import load_checkpoint
 
+
 class Trainer:
 
     def __init__(self, cfg, logger):
@@ -24,8 +25,6 @@ class Trainer:
         self.logger = logger
         self._task = cfg['task']
         self.input_size = cfg['dataset'].pop('input_size')
-
-
         # statistics data info
         self.logger.info('statistics_data:')
         if cfg["dataset"].get("statistics_data", None):
@@ -64,13 +63,17 @@ class Trainer:
                                     performance_dir=self.performance_dir
                                     )
         self.is_few_shot = 'FS' in cfg['dataset']['type']
-
+        self._vis_predictions_dir = os.path.join(self.performance_dir, 'vis_predictions')
         if self._task == "classification":
             if self.is_few_shot:
                 self._validate = self._validate_fs
             else:
                 self._validate = self._validate_cls
-            self._visualizer = None
+            self._visualizer = Visualizer(
+                task=self._task,
+                class_names=self.train_data_loader.dataset.class_names,
+                input_size=self.input_size
+            )
             self.vis_score_threshold = None
         elif self._task == "detection":
             self.max_number_gt = self.train_data_loader.dataset.max_number_object_per_img
@@ -84,8 +87,6 @@ class Trainer:
                 input_size=self.input_size,
                 vis_score_threshold=self.vis_score_threshold
             )
-            self._vis_predictions_dir = os.path.join(
-                self.performance_dir, 'vis_predictions')
 
         elif self._task == "segmentation":
             self._visualizer = Visualizer(
@@ -93,12 +94,14 @@ class Trainer:
                 class_names=self.train_data_loader.dataset.class_names,
                 input_size=self.input_size
             )
-            self._vis_predictions_dir = os.path.join(
-                self.performance_dir, 'vis_predictions')
-
             self.vis_score_threshold = None
+        # save config file
+        cfg["dataset"]["classes_name"] = self.train_data_loader.dataset.class_names
+        cfg['dataset']["input_size"] = self.input_size
+        json_path = os.path.join(cfg['output_dir'], "config.json")
+        with open(json_path, 'w') as f:
+            json.dump(cfg, f, indent=4)
 
-            pass
     def build_model(self, cfg, num_classes):
         model_cfg = cfg.get('model')
         number_classes_model ={"classification":"backbone",
@@ -210,7 +213,9 @@ class Trainer:
 
     def _validate_cls(self):
         self.model.eval()
+        img_paths = []
         for step, (img_batch, label_batch) in enumerate(self.val_data_loader):
+            img_paths += [img_path for img_path in label_batch['image_path']]
             if not isinstance(img_batch, torch.Tensor):
                 img_batch = torch.from_numpy(img_batch).to(self._device, dtype=torch.float32)
             pred = self.model(img_batch)
@@ -223,6 +228,7 @@ class Trainer:
 
         self._val_pred = pred_array
         self._val_true = gt_array
+        self._val_img_paths = img_paths
 
     def _validate_det(self, max_number_gt):
         self.model.eval()

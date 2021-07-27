@@ -36,7 +36,7 @@ class DSNet(nn.Module):
 
         if 'input_size' in kwargs:
             kwargs.pop('input_size')
-
+        self.num_classes = num_classes
         self.stage_channels = [make_divisible(x * width_multiple, 8) for x in stage_channels]
         self.out_levels = out_levels
         self.use_spp = use_spp
@@ -77,6 +77,10 @@ class DSNet(nn.Module):
 
             input_channels = output_channels
 
+            if num_classes is not None:
+                self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+                self.fc = nn.Linear(self.stage_channels[-1], num_classes)
+
     def init_weights(self, **kwargs):
         for m in self.modules():
             t = type(m)
@@ -99,5 +103,11 @@ class DSNet(nn.Module):
             x = getattr(self, name)(x)
             if i + 2 in self.out_levels:
                 outputs.append(x)
+
+        if self.num_classes is not None:
+            x = self.avgpool(x)
+            x = x.contiguous().view(-1, self.stage_channels[-1])
+            x = self.fc(x)
+            return x
 
         return outputs if len(outputs) > 1 else outputs[0]

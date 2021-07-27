@@ -13,5 +13,6 @@ from .dsnet import DSNet
 from .utils import *
 from .mobilenetv3 import MobileNetV3
 from .swin_transformer import SwinTransformer
+from .efficientnet import EfficientNetv2_tiny
 
 __all__ = [k for k in globals().keys() if not k.startswith("_")]
