@@ -12,11 +12,11 @@
             "means": [108.825, 116.744, 115.917],
             "stds": [56.843, 55.318, 56.83]
         },
-        "train_data_path": "D:\\datasets\\huangluyao\\detection\\plane_car/train",
-        "val_data_path": "D:\\datasets\\huangluyao\\detection\\plane_car/val"
+        "train_data_path": "/media/hly/Samsung_T51/datasets/huangluyao/detection/plane_car/train",
+        "val_data_path": "/media/hly/Samsung_T51/datasets/huangluyao/detection/plane_car/val"
     },
     "loader_cfg": {
-        "batch_size": 2,
+        "batch_size": 4,
         "num_workers": 0
     },
     "scheduler": {
@@ -24,7 +24,8 @@
         "max_epochs": 125,
         "lr_decay_method": "polynomial_decay_restarts",
         "cycle_epoch": 60,
-        "cycle_radio": 1.2,
+        "cycle_radio": 1.0,
         "power": 3
-    }
+    },
+    "use_ema": false
 }
