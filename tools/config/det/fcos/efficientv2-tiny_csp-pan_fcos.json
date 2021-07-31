@@ -1,6 +1,6 @@
 {
     "__base__": ["configs/det/models/FCOS/FCOS_efficientnetv2-rw-t_csp-pan.json",
                 "tools/config/augmentation/base_augmentation.json",
-                "tools/config/train_config/base.json"],
+                "tools/config/train_config/underwater.json"],
     "task": "detection"
 }

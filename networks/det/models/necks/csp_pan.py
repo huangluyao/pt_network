@@ -61,8 +61,6 @@ class CSP_PAN(nn.Module):
                                        for ic, oc in zip(input_channels[self.start_level-1:self.backbone_end_level],
                                                          output_channels[self.start_level-1:self.backbone_end_level]))
 
-
-
     def forward(self, features):
 
         temps = []

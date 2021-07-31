@@ -9,7 +9,7 @@ from test_utils.utils.checkpoint import load_checkpoint
 from test_utils.evaluator.visualizer import resize_box, resize_mask, show_detections, get_pred, get_BGR_values
 from tools.train import parse_config_file, fromfile
 from test_utils.utils.file_io import mkdir
-
+from other_code.dark import deHaze
 temp = True
 if temp:
     import csv
@@ -146,7 +146,7 @@ if __name__=="__main__":
     def setup():
         parser = argparse.ArgumentParser()
         parser.add_argument('-c', '--config',
-                            default="export/detection/FCOS_DSNet_CSP_PAN_DetectionDataset/2021-07-22-12-36-07/config.json",
+                            default="export/detection/FCOS_DSNet_CSP_PAN_DetectionDataset/2021-07-27-11-54-28/config.json",
                             type=str)
         parser.add_argument('-f', '--file', type=str, default='', help='initial weights path')
         args = parser.parse_args()
@@ -157,7 +157,7 @@ if __name__=="__main__":
     cfg, file = setup()
 
     if file == '':
-        file = "J:\\datasets\\huangluyao\\standard\\under_water\\test-A-image\\test-A-image"
+        file = "/media/hly/Samsung_T51/datasets/huangluyao/standard/under_water/test-A-image/test-A-image"
 
     pred = Predict(cfg)
     IMAGE_FORMER = ['JPEG', 'JPG', 'JPE', 'BMP', 'PNG', 'JP2', 'PBM', 'PGM', 'PPM']
@@ -170,6 +170,7 @@ if __name__=="__main__":
         for image_name in image_names:
             image_path = os.path.join(file, image_name)
             img = cv2.imread(image_path)
+            img = deHaze(img /255.0)*255
             result = pred(img, image_path)
             print(f"predict image from {image_path}")
             cv2.imwrite(os.path.join(result_dir, image_name), result)

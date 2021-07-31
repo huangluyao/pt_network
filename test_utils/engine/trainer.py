@@ -16,6 +16,7 @@ from .train_base import TrainerBase
 from ..datasets import build_dataset, statistics_data
 from ..evaluator import Evaluator, Visualizer, model_info
 from ..utils.checkpoint import load_checkpoint
+from ..utils.ema import ModelEMA
 
 
 class Trainer:
@@ -25,6 +26,8 @@ class Trainer:
         self.logger = logger
         self._task = cfg['task']
         self.input_size = cfg['dataset'].pop('input_size')
+        self.max_epochs = cfg['scheduler']['max_epochs']
+
         # statistics data info
         self.logger.info('statistics_data:')
         if cfg["dataset"].get("statistics_data", None):
@@ -44,9 +47,15 @@ class Trainer:
         self.model = self.build_model(cfg, len(self.train_data_loader.dataset.class_names))
         self.optimizer = build_optimizer(self.model, cfg['optimizer'])
         self.scheduler = build_scheduler(self.optimizer, cfg['scheduler'])
-
-        self.max_epochs = cfg['scheduler']['max_epochs']
         self._device, gpu_ids = self.get_device(gpu_id=cfg.get('gpu_id', 0))
+
+        self.logger.info(f"use gpu ids {gpu_ids}")
+        if isinstance(gpu_ids, list):
+            if len(gpu_ids) > 0:
+                # os.environ['CUDA_VISIBLE_DEVICES'] =  ",".join([str(x) for x in gpu_ids])
+                # self.model = torch.nn.parallel.DistributedDataParallel(self.model)
+                self.model = torch.nn.DataParallel(self.model, device_ids=gpu_ids)
+
         self.model = self.model.to(self._device)
         self.logger.info('model info:')
         self.logger.info(model_info(self.model, self.input_size))
@@ -102,6 +111,10 @@ class Trainer:
         with open(json_path, 'w') as f:
             json.dump(cfg, f, indent=4)
 
+        self.use_ema = cfg.get("use_ema", None)
+        if self.use_ema:
+            self.ema_model = ModelEMA(self.model, 0.9998)
+
     def build_model(self, cfg, num_classes):
         model_cfg = cfg.get('model')
         number_classes_model ={"classification":"backbone",
@@ -144,6 +157,9 @@ class Trainer:
                               self._cur_epoch_losses[0]-self._cur_epoch_losses[-1]))
             self.logger.info(epoch_status)
 
+            if self.use_ema:
+                self.ema_model.update_attr(self.model)
+
             # validation
             self._val_feature = None
             if self._task == "classification":
@@ -163,12 +179,13 @@ class Trainer:
             )
 
             # save checkpoint
+            state_dict = self.ema_model.ema.state_dict() if self.use_ema else self.model.state_dict()
             if self._evaluator.is_train_best_epoch():
                 print("Saving checkpoint of minimum training loss.")
                 state = {
                     'arch': type(self.model).__name__,
                     'epoch': self._cur_epoch,
-                    'state_dict': self.model.state_dict(),
+                    'state_dict': state_dict,
                     'optimizer': self.optimizer.state_dict(),
                 }
                 torch.save(state, "%s/train_best.pth"%(self._checkpoint_dir))
@@ -177,7 +194,7 @@ class Trainer:
                 state = {
                     'arch': type(self.model).__name__,
                     'epoch': self._cur_epoch,
-                    'state_dict': self.model.state_dict(),
+                    'state_dict': state_dict,
                     'optimizer': self.optimizer.state_dict(),
                 }
                 torch.save(state, "%s/val_best.pth"%(self._checkpoint_dir))
@@ -213,12 +230,14 @@ class Trainer:
 
     def _validate_cls(self):
         self.model.eval()
+        evalmodel = self.ema_model.ema if self.use_ema else self.model
+        evalmodel.eval()
         img_paths = []
         for step, (img_batch, label_batch) in enumerate(self.val_data_loader):
             img_paths += [img_path for img_path in label_batch['image_path']]
             if not isinstance(img_batch, torch.Tensor):
                 img_batch = torch.from_numpy(img_batch).to(self._device, dtype=torch.float32)
-            pred = self.model(img_batch)
+            pred = evalmodel(img_batch)
             if step ==0:
                 pred_array = pred.detach().cpu().numpy()
                 gt_array = label_batch['gt_labels']
@@ -231,17 +250,20 @@ class Trainer:
         self._val_img_paths = img_paths
 
     def _validate_det(self, max_number_gt):
-        self.model.eval()
+        evalmodel = self.ema_model.ema if self.use_ema else self.model
+        evalmodel.eval()
         img_paths = []
         for step, (img_batch, label_batch) in enumerate(self.val_data_loader):
             img_paths += label_batch['image_path']
             if not isinstance(img_batch, torch.Tensor):
                 img_batch = torch.from_numpy(img_batch).to(self._device, dtype=torch.float32)
-            pred = self.model(img_batch)
+            pred = evalmodel(img_batch)
 
             batch_label = []
             for boxes, index in zip(label_batch['bboxes'], label_batch['label_index']):
                 index = np.expand_dims(index, axis=-1)
+                if len(boxes) ==0 :
+                    boxes = np.empty(shape=(0, 4))
                 gt_label = np.concatenate([boxes, index], axis=-1)
                 if gt_label.shape[0] < max_number_gt:
                     padding = np.zeros([max_number_gt - gt_label.shape[0], gt_label.shape[1]])
@@ -261,13 +283,14 @@ class Trainer:
         self._val_img_paths = img_paths
 
     def _validate_seg(self):
-        self.model.eval()
+        evalmodel = self.ema_model.ema if self.use_ema else self.model
+        evalmodel.eval()
         img_paths = []
         for step, (img_batch, label_batch) in enumerate(self.val_data_loader):
             img_paths += [img_path for img_path in label_batch['image_path']]
             if not isinstance(img_batch, torch.Tensor):
                 img_batch = torch.from_numpy(img_batch).to(self._device, dtype=torch.float32)
-            pred = self.model(img_batch)
+            pred = evalmodel(img_batch)
             if step == 0:
                 pred_array = pred.detach().cpu().numpy()
                 pred_array = np.transpose(pred_array, [0, 2, 3, 1])
@@ -280,7 +303,6 @@ class Trainer:
         self._val_pred = pred_array
         self._val_true = gt_array
         self._val_img_paths = img_paths
-
 
     def train_one_epoch(self):
 
@@ -311,6 +333,8 @@ class Trainer:
             cur_loss = losses['loss']
             cur_loss.backward()
             self.optimizer.step()
+            if self.use_ema:
+                self.ema_model.update(self.model)
             cur_lr = self.scheduler.get_lr()[0]
             self._cur_epoch_losses.append(cur_loss.detach().cpu().numpy())
             if step % 10 == 0:
@@ -321,15 +345,25 @@ class Trainer:
                 self.logger.info(step_status)
 
     def get_device(self, gpu_id):
+
         gpu_count = torch.cuda.device_count()
-        if gpu_id > 0 and gpu_count == 0:
-            print("Warning: There\'s no GPU available on this machine, training will be performed on CPU.")
-            num_gpus = 0
-        if gpu_id > gpu_count:
-            print("Warning: The number of GPU\'s configured to use is {}, but only {} are available "
-                  "on this machine.".format(gpu_id, gpu_count))
-            gpu_id = gpu_count
-        device = torch.device('cuda:%d'%(gpu_id) if torch.cuda.is_available() else 'cpu')
+        if gpu_count == 0:
+            self.logger.info("Warning: There\'s no GPU available on this machine, training will be performed on CPU.")
+
+        if isinstance(gpu_id, int):
+            if gpu_id > gpu_count:
+                print("Warning: The number of GPU\'s configured to use is {}, but only {} are available "
+                      "on this machine.".format(gpu_id, gpu_count))
+                gpu_id = gpu_count
+            device = torch.device('cuda:%d'%(gpu_id) if torch.cuda.is_available() else 'cpu')
+            return device, gpu_id
+
+        if isinstance(gpu_id, list):
+            if len(gpu_id) > 1:
+                # torch.distributed.init_process_group(backend="nccl", world_size=1,init_method='tcp://localhost:23456', rank=0)
+                pass
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
         return device, gpu_id
 
     def update_dateset_info(self, pipelines):
