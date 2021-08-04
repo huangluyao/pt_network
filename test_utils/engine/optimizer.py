@@ -76,6 +76,14 @@ def build_scheduler(optimizer, lr_config):
         _scheduler = CosineDecayRestart(cycle_epoch,cycle_radio,warm_up_steps)
     elif lr_decay_method == "polynomial_decay_restarts":
         _scheduler = PolynomialDecay(cycle_epoch,cycle_radio,_lr_config.pop('power', 1))
+    elif lr_decay_method == "cosine_annealing_restarts":
+        return lr_scheduler.CosineAnnealingWarmRestarts(optimizer,
+                                                        T_0=cycle_epoch,
+                                                        )
+
     else:
         raise ValueError("unsupported lr decay method: {}".format(lr_decay_method))
     return lr_scheduler.LambdaLR(optimizer, lr_lambda=_scheduler)
+
+
+

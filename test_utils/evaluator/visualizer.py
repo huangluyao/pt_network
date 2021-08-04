@@ -39,15 +39,14 @@ class Visualizer:
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=1,
                         color=(0, 255, 0))
-
-            cv2.imwrite(vis_paths[idx], ori_image)
+            cv2.imencode('.jpg', ori_image)[1].tofile(vis_paths[idx])
+            # cv2.imwrite(vis_paths[idx], ori_image)
 
     def _visualize_det(self, img_paths, predictions, vis_predictions_dir, image_names=None):
         num_preds = len(img_paths)
         if not os.path.exists(vis_predictions_dir):
             os.makedirs(vis_predictions_dir)
-        if image_names is None:
-            vis_paths = [os.path.join(vis_predictions_dir, 'pred_%03d.png'%(idx)) for idx in range(num_preds)]
+        vis_paths = [os.path.join(vis_predictions_dir, 'pred_%03d.png'%(idx)) for idx in range(num_preds)]
 
         for idx in range(num_preds):
             ori_image = cv2.imread(img_paths[idx])
@@ -55,7 +54,8 @@ class Visualizer:
             boxes = predictions[idx]
             boxes = resize_box(ori_size , (self._input_size[1], self._input_size[0]), boxes)
             vis_result = show_detections(ori_image, boxes, self._class_names, self._vis_score_threshold)
-            cv2.imwrite(vis_paths[idx], vis_result)
+            cv2.imencode('.jpg', vis_result)[1].tofile(vis_paths[idx])
+            # cv2.imwrite(vis_paths[idx], vis_result)
 
     def _visualize_seg(self, img_paths, predictions, vis_predictions_dir):
         num_preds = len(img_paths)
@@ -81,8 +81,8 @@ class Visualizer:
             mask = (mask==0)[:,:,None]
             vis_preds = (ori_image*mask+(1-mask)*(vis_preds*0.5+ori_image*0.5)).astype(np.uint8)
             vis_result = np.hstack((ori_image, vis_preds))
-            cv2.imwrite(vis_paths[idx], vis_result)
-
+            cv2.imencode('.jpg', vis_result)[1].tofile(vis_paths[idx])
+            # cv2.imwrite(vis_paths[idx], vis_result)
 
 
 def resize_box(org_size, inptut_size, boxes):

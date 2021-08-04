@@ -1,0 +1,43 @@
+{
+    "_base_": "../../../_base_/models/yolox/yolox.json",
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "model": {
+        "backbone": {
+            "type": "ResNet",
+            "depth": 18,
+            "num_stages": 4,
+            "frozen_stages": 1,
+            "norm_cfg":{"type":"BN", "requires_grad":false},
+            "norm_eval": true,
+            "out_levels": [3, 4, 5 ]
+        },
+        "neck": {
+            "type": "CSP_PAN",
+            "input_channels": [128, 256, 512],
+            "output_channels": [256, 256, 256],
+            "strides": [8, 16, 32],
+            "act_cfg": {"type": "SiLU"},
+            "norm_cfg":{"type":"BN", "requires_grad":false}
+        },
+        "bbox_head": {
+            "type": "YOLOXHead",
+            "num_classes": 1,
+            "in_channels": 256,
+            "feat_channels": 128,
+            "stacked_convs": 2,
+            "strides": [8,16,32]
+        },
+
+        "train_cfg":
+        {
+            "score_thr":0.3,
+            "nms":  0.3,
+            "max_per_img": 100
+        },
+        "test_cfg":
+        {
+            "score_thr":0.3
+        }
+
+    }
+}

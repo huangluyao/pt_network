@@ -4,7 +4,7 @@ import cv2
 import torch
 import numpy as np
 from ..datasets import build_dataset
-
+from ..datasets.detection_dataset import MosaicDetection
 
 def calc_mean_std(images_path):
     # ---------------calc mean-------------------
@@ -69,10 +69,13 @@ def statistics_data(image_paths):
     return calc_mean_std(merge_paths)
 
 
-def build_data_loader(task, type, train_data_path, val_data_path, loader_cfg, **cfg):
+def build_data_loader(task, type, input_size, train_data_path, val_data_path, loader_cfg, **cfg):
 
+    if task == "detection":
+        mosaic = cfg.pop("use_mosaic", None)
     train_cfg_dict = dict(type=type, data_path=train_data_path, **cfg)
     val_cfg_dict = dict(type=type, data_path=val_data_path, mode='val', **cfg)
+
     train_dataset = build_dataset(train_cfg_dict)
     val_dataset = build_dataset(val_cfg_dict)
 
@@ -83,6 +86,8 @@ def build_data_loader(task, type, train_data_path, val_data_path, loader_cfg, **
             dataset_collate = classification_dataset_collate
     elif task=="detection":
         dataset_collate = detection_dataset_collate
+        if mosaic:
+            train_dataset = MosaicDetection(train_dataset, input_size)
 
     train_data_loader = torch.utils.data.DataLoader(train_dataset, shuffle=True, collate_fn=dataset_collate, **loader_cfg)
     val_data_loader = torch.utils.data.DataLoader(val_dataset, collate_fn=dataset_collate, **loader_cfg)
@@ -138,5 +143,5 @@ def detection_dataset_collate(batch):
                 batch_labels[key].append(info[key])
             else:
                 batch_labels[key] = [info[key]]
-
-    return np.array(batch_img), batch_labels
+    batch_img = np.transpose(np.array(batch_img),[0, 3, 1, 2])
+    return batch_img, batch_labels

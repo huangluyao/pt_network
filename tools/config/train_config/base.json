@@ -8,6 +8,7 @@
     "dataset": {
         "input_size": [640, 640],
         "type": "DetectionDataset",
+        "use_mosaic": true,
         "statistics_data": {
             "means": [108.825, 116.744, 115.917],
             "stds": [56.843, 55.318, 56.83]
@@ -22,8 +23,8 @@
     "scheduler": {
         "warm_up_epochs": 5,
         "max_epochs": 125,
-        "lr_decay_method": "polynomial_decay_restarts",
-        "cycle_epoch": 60,
+        "lr_decay_method": "cosine_annealing_restarts",
+        "cycle_epoch": 30,
         "cycle_radio": 1.0,
         "power": 3
     },

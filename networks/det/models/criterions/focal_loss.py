@@ -25,12 +25,14 @@ def det_onehot_target(pred, gt):
 
     pred_shap = pred.shape
     gt_shap = gt.shape
-    num_classes = pred_shap[-1] + 1   # add background
 
-    with torch.no_grad():
-        if len(pred_shap) != len(gt_shap):
+    if len(pred_shap) != len(gt_shap):
+        with torch.no_grad():
+            num_classes = pred_shap[-1] + 1  # add background
             gt_onehot = gt.to(dtype=torch.int64)
             gt_onehot = F.one_hot(gt_onehot, num_classes=num_classes)[:, :pred_shap[-1]]
+    else:
+        return gt
     return gt_onehot
 
 

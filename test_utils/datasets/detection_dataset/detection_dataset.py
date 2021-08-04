@@ -25,7 +25,7 @@ class DetectionDataset(BaseDataset):
     └─annotations
     """
 
-    def __init__(self, data_path, augmentations, mode='train', **kwargs):
+    def __init__(self, data_path, augmentations, mode='train', mosaic=False, **kwargs):
         super(DetectionDataset, self).__init__(data_path, augmentations, mode, **kwargs)
 
     def get_image_info(self, data_path, mode, **kwargs):

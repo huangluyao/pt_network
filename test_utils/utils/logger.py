@@ -51,7 +51,7 @@ def setup_logger(
     if output is None:
         output = os.path.join('./export', cfg["task"], task_name, cur_time)
     else:
-        output = os.path.join(output, cfg["task"], task_name, cur_time)
+        output = os.path.join(output)
     cfg.update({"output_dir": output})
 
     if not os.path.exists(output):

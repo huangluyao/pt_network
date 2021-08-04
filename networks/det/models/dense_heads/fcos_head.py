@@ -82,21 +82,33 @@ class FCOSHead(AnchorFreeHead):
 
     def _init_layers(self):
         super(FCOSHead, self)._init_layers()
-        self.conv_centerness = nn.Conv2d(self.feat_channels, 1, 3, padding=1)
+        self.conv_centerness = nn.ModuleList([nn.Conv2d(self.feat_channels, 1, 3, padding=1) for _ in range(len(self.in_channels))])
         self.scales = nn.ModuleList([Scale(1.0) for _ in self.strides])
 
     def init_weights(self):
         super(FCOSHead, self).init_weights()
-        normal_init(self.conv_centerness, std=0.01)
+        for m in self.conv_centerness:
+            normal_init(m, std=0.01)
 
     def forward(self, feats):
 
-        return multi_apply(self.forward_single, feats, self.scales, self.strides)
+        return multi_apply(self.forward_single, feats, self.scales, self.strides, self.conv_centerness,
+                           self.cls_convs, self.reg_convs, self.conv_cls, self.conv_reg)
 
-    def forward_single(self, x, scale, stride):
-        cls_score, bbox_pred, cls_feat, reg_feat = super(FCOSHead, self).forward_single(x)
+    def forward_single(self, x, scale, stride, conv_centerness,
+                       cls_convs, reg_convs, conv_cls, conv_reg
+                       ):
 
-        centerness = self.conv_centerness(reg_feat) if self.centerness_on_reg else self.conv_centerness(cls_feat)
+        cls_feat = x
+        reg_feat = x
+
+        cls_feat = cls_convs(cls_feat)
+        cls_score = conv_cls(cls_feat)
+
+        reg_feat = reg_convs(reg_feat)
+        bbox_pred = conv_reg(reg_feat)
+
+        centerness = conv_centerness(reg_feat) if self.centerness_on_reg else conv_centerness(cls_feat)
 
         bbox_pred = scale(bbox_pred).float()
 
@@ -364,7 +376,7 @@ class FCOSHead(AnchorFreeHead):
     def _get_target_single(self, gt_bboxes, gt_labels, points,
                            regress_ranges, num_points_per_lvl):
         num_points = points.shape[0]
-        num_gts = gt_labels.shape[0]
+        num_gts = len(gt_labels)
 
         if not isinstance(gt_bboxes, torch.Tensor):
             gt_bboxes = regress_ranges.new_tensor(gt_bboxes)

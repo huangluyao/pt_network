@@ -41,7 +41,7 @@ class Trainer:
         # update means and stds
         self.update_dateset_info(cfg['dataset'])
         # build loader
-        self.train_data_loader, self.val_data_loader = build_data_loader(self._task, loader_cfg=cfg['loader_cfg'], **cfg['dataset'])
+        self.train_data_loader, self.val_data_loader = build_data_loader(self._task, input_size=self.input_size, loader_cfg=cfg['loader_cfg'], **cfg['dataset'])
         # self.logger.info(self.train_data_loader.dataset.class_names)
         # init model
         self.model = self.build_model(cfg, len(self.train_data_loader.dataset.class_names))

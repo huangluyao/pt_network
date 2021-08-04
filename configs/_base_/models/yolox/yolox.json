@@ -1,0 +1,23 @@
+{
+    "model": {
+        "type": "YOLOX",
+        "backbone": {
+            "out_levels": [
+                2,
+                3,
+                4,
+                5
+            ],
+            "in_channels": 3
+        }
+    },
+
+    "train_cfg":
+    {
+        "score_thr":0.01,
+        "nms":  0.5,
+        "max_per_img": 100
+    },
+    "test_cfg":
+    {}
+}

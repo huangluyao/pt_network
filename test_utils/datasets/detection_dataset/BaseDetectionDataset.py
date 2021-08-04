@@ -17,15 +17,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         self.images_info = self.get_image_info(data_path, mode, **kwargs)
 
     def __getitem__(self, item):
-        image_info = self.images_info[item]
-        img = cv2.imread(image_info["image_path"])
-        image_info.update(dict(image=img,
-                               src_shape=img.shape))
-
-        data = self.transforms(**image_info)
-        image = np.transpose(data.pop('image'), [2, 0, 1])
-        data['bboxes'] = np.array(data['bboxes']).astype(np.float32)
-        return image, data
+        return self.pull_item(item)
 
     def __len__(self):
         return len(self.images_info)
@@ -34,3 +26,14 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
     def get_image_info(self, data_path, mode, **kwargs):
 
         pass
+
+    def pull_item(self, item):
+        image_info = self.images_info[item]
+        img = cv2.imread(image_info["image_path"])
+        image_info.update(dict(image=img,
+                               src_shape=img.shape))
+
+        data = self.transforms(**image_info)
+        image = data.pop('image')
+        data['bboxes'] = np.array(data['bboxes']).astype(np.float32)
+        return image, data

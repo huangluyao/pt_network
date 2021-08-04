@@ -30,5 +30,6 @@
         "cycle_epoch": 30,
         "cycle_radio": 0.7,
         "power": 3
-    }
+    },
+    "output_dir": "export/测试"
 }

@@ -26,12 +26,16 @@ class AnchorFreeHead(BaseDenseHead):
                  loss_bbox=dict(type='IoULoss', loss_weight=1.0),
                  conv_cfg=None,
                  norm_cfg=dict(type='BN2d'),
+                 act_cfg=dict(type='ReLU'),
                  train_cfg=None,
                  test_cfg=None, **kwargs):
 
         super(AnchorFreeHead, self).__init__()
         self.num_classes = num_classes
-        self.in_channels = in_channels
+        if isinstance(in_channels, int):
+            self.in_channels = [in_channels for _ in range(len(strides))]
+        else:
+            self.in_channels = in_channels
         self.feat_channels = feat_channels
         self.stacked_convs = stacked_convs
         self.strides = strides
@@ -44,6 +48,7 @@ class AnchorFreeHead(BaseDenseHead):
         self.test_cfg = test_cfg
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
+        self.act_cfg = act_cfg
         self.fp16_enabled = False
 
         self._init_layers()
@@ -57,90 +62,71 @@ class AnchorFreeHead(BaseDenseHead):
     def _init_cls_convs(self):
         """ stacked convs"""
 
-        # cfg = dict(norm_cfg=self.norm_cfg)
-        # self.cls_convs = C3(self.in_channels,
-        #                     self.feat_channels,
-        #                     numbers=self.stacked_convs,
-        #                     shortcut=True,
-        #                     groups=1,
-        #                     expansion=0.5,
-        #                     **cfg
-        #                     )
-
         self.cls_convs = nn.ModuleList()
-        for i in range(self.stacked_convs):
-            chn = self.in_channels if i == 0 else self.feat_channels
-            if self.dcn_on_last_conv and i == self.stacked_convs - 1:
-                conv_cfg = dict(type='DCNv2')
-            else:
-                conv_cfg = self.conv_cfg
-            self.cls_convs.append(
-                ConvModule(
-                    chn,
-                    self.feat_channels,
-                    3,
-                    stride=1,
-                    padding=1,
-                    conv_cfg=conv_cfg,
-                    norm_cfg=self.norm_cfg,
-                    bias=self.conv_bias))
+        for i in range(len(self.in_channels)):
+            convs = []
+            for j in range(self.stacked_convs):
+                chn = self.in_channels[i] if j == 0 else self.feat_channels
+                if self.dcn_on_last_conv and j == self.stacked_convs - 1:
+                    conv_cfg = dict(type='DCNv2')
+                else:
+                    conv_cfg = self.conv_cfg
+                convs.append(
+                    ConvModule(
+                        chn,
+                        self.feat_channels,
+                        3,
+                        stride=1,
+                        padding=1,
+                        conv_cfg=conv_cfg,
+                        norm_cfg=self.norm_cfg,
+                        act_cfg=self.act_cfg,
+                        bias=self.conv_bias))
+            self.cls_convs.append(nn.Sequential(*convs))
 
     def _init_reg_convs(self):
         """Initialize bbox regression conv layers of the head."""
-        # cfg = dict(norm_cfg=self.norm_cfg)
-        # self.reg_convs = C3(self.in_channels,
-        #                     self.feat_channels,
-        #                     numbers=self.stacked_convs,
-        #                     shortcut=True,
-        #                     groups=1,
-        #                     expansion=0.5,
-        #                     **cfg
-        #                     )
+
         self.reg_convs = nn.ModuleList()
-        for i in range(self.stacked_convs):
-            chn = self.in_channels if i == 0 else self.feat_channels
-            if self.dcn_on_last_conv and i == self.stacked_convs - 1:
-                conv_cfg = dict(type='DCNv2')
-            else:
-                conv_cfg = self.conv_cfg
-            self.reg_convs.append(
-                ConvModule(
-                    chn,
-                    self.feat_channels,
-                    3,
-                    stride=1,
-                    padding=1,
-                    conv_cfg=conv_cfg,
-                    norm_cfg=self.norm_cfg,
-                    bias=self.conv_bias))
+        for i in range(len(self.in_channels)):
+            convs = []
+            for j in range(self.stacked_convs):
+                chn = self.in_channels[i] if j == 0 else self.feat_channels
+                if self.dcn_on_last_conv and j == self.stacked_convs - 1:
+                    conv_cfg = dict(type='DCNv2')
+                else:
+                    conv_cfg = self.conv_cfg
+                convs.append(
+                    ConvModule(
+                        chn,
+                        self.feat_channels,
+                        3,
+                        stride=1,
+                        padding=1,
+                        conv_cfg=conv_cfg,
+                        norm_cfg=self.norm_cfg,
+                        act_cfg=self.act_cfg,
+                        bias=self.conv_bias))
+            self.reg_convs.append(nn.Sequential(*convs))
 
     def _init_predictor(self):
         """Initialize predictor layers of the head."""
-        self.conv_cls = nn.Conv2d(
-            self.feat_channels, self.num_classes, 3, padding=1)
-        self.conv_reg = nn.Conv2d(self.feat_channels, 4, 3, padding=1)
+        self.conv_cls = nn.ModuleList([nn.Conv2d(self.feat_channels, self.num_classes, 3, padding=1) for _ in range(len(self.in_channels))])
+        self.conv_reg = nn.ModuleList([nn.Conv2d(self.feat_channels, 4, 3, padding=1)for _ in range(len(self.in_channels))])
 
     def init_weights(self):
-        for m in self.cls_convs:
-            if isinstance(m.conv, nn.Conv2d):
-                normal_init(m.conv, std=0.01)
-        for m in self.reg_convs:
-            if isinstance(m.conv, nn.Conv2d):
-                normal_init(m.conv, std=0.01)
-        #
-        # for m in self.modules():
-        #     t = type(m)
-        #     if t is nn.Conv2d:
-        #         pass
+        for m in self.modules():
+            t = type(m)
+            if t is nn.Conv2d:
+                normal_init(m, std=0.01)
         #     elif t is nn.BatchNorm2d:
         #         m.eps = 1e-3
         #         m.momentum = 0.03
         #     elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6]:
         #         m.inplace = True
-
-        bias_cls = bias_init_with_prob(0.01)
-        normal_init(self.conv_cls, std=0.01, bias=bias_cls)
-        normal_init(self.conv_reg, std=0.01)
+        for m in self.conv_cls:
+            bias_cls = bias_init_with_prob(0.01)
+            normal_init(m, std=0.01, bias=bias_cls)
 
     def forward(self, feats):
         """Forward features from the upstream network.
@@ -158,9 +144,9 @@ class AnchorFreeHead(BaseDenseHead):
                     level, each is a 4D-tensor, the channel number is
                     num_points * 4.
         """
-        return multi_apply(self.forward_single, feats)
+        return multi_apply(self.forward_single, feats, self.cls_convs, self.reg_convs, self.conv_cls, self.conv_reg)
 
-    def forward_single(self, x):
+    def forward_single(self, x, cls_convs, reg_convs, conv_cls, conv_reg):
         """Forward features of a single scale level.
 
         Args:
@@ -174,19 +160,11 @@ class AnchorFreeHead(BaseDenseHead):
         cls_feat = x
         reg_feat = x
 
-        for cls_layer in self.cls_convs:
-            cls_feat = cls_layer(cls_feat)
-        cls_score = self.conv_cls(cls_feat)
+        cls_feat = cls_convs(cls_feat)
+        cls_score = conv_cls(cls_feat)
 
-        for reg_layer in self.reg_convs:
-            reg_feat = reg_layer(reg_feat)
-        bbox_pred = self.conv_reg(reg_feat)
-        #
-        # cls_feat = self.cls_convs(cls_feat)
-        # cls_score = self.conv_cls(cls_feat)
-        # reg_feat = self.reg_convs(reg_feat)
-        # bbox_pred = self.conv_reg(reg_feat)
-        #
+        reg_feat = reg_convs(reg_feat)
+        bbox_pred = conv_reg(reg_feat)
         return cls_score, bbox_pred, cls_feat, reg_feat
 
     @abstractmethod

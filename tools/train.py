@@ -6,7 +6,9 @@ from test_utils.engine.trainer import Trainer
 
 
 def parse_config_file(config_file):
-    with open(config_file, 'r') as f:
+    with open(config_file, 'r', encoding='utf-8') as f:
+        # data = f.read().decode(encoding='gbk').encode(encoding='utf-8')
+        # config_dict= json.loads(data)
         config_dict = json.load(f, object_pairs_hook=OrderedDict)
 
     return config_dict
@@ -15,7 +17,8 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default="tools/config/det/yolof/smart-backbone_csp-pan_yolof.json",
+                        # default="tools/config/det/yolox/resnet18_csp-pan_yolox.json",
+                        default="tools/config/det/fcos/smart-backbone_csp-pan_fcos.json",
                         type=str)
     parser.add_argument('-p', '--pretrained', type=str,
                         default='',
