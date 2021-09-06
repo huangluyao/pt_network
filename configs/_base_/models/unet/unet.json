@@ -1,0 +1,25 @@
+{
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "out_levels": [1, 2, 3, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "UNetHead",
+            "in_channels": [64, 256, 512, 1024, 2048],
+            "in_index": [0, 1, 2, 3, 4],
+            "head_width": 64,
+            "num_classes": 32,
+            "final_drop": 0.0,
+            "num_upscales": 4,
+            "refine_channels": 128,
+            "deep_supervision": false,
+            "aux_weight": 0.4,
+            "align_corners": true,
+            "norm_cfg": {"type": "BN", "momentum": 0.1, "track_running_stats": true},
+            "act_cfg": {"type": "LeakyReLU", "inplace": true, "negative_slope": 0.01},
+            "loss": {"type": "CrossEntropyLoss"}
+        }
+    }
+}

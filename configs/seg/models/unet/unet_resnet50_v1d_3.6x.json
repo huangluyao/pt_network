@@ -1,0 +1,20 @@
+{
+    "_base_": "../../../_base_/models/unet/unet.json",
+    "pretrained": "nas://model_zoo/pth/gluoncv/resnet50_v1d_0.48.pth",
+    "model": {
+        "backbone": {
+            "type": "PrunedResNet",
+            "model_name": "resnet50_v1d_0.48",
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": [
+                32,
+                32,
+                128,
+                320,
+                1920
+            ]
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "_base_": "../../../_base_/models/unet/unet.json",
+    "pretrained": "nas://model_zoo/pth/shufflenet/ShuffleNetV2+.Small.pth.tar",
+    "model": {
+        "backbone": {
+            "type": "ShuffleNetV2Plus",
+            "size": "Small",
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": [
+                16,
+                36,
+                104,
+                208,
+                416
+            ]
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "_base_": "../../../_base_/models/unet/unet.json",
+    "pretrained": "model_zoo/pth/backbone/mobilnetv3/mobilenetv3_large.pth",
+    "model": {
+        "backbone": {
+            "type": "MobileNetV3",
+            "mode": "large",
+            "input_channel":3
+        },
+        "decode_head": {
+            "in_channels": [
+                16,
+                24,
+                40,
+                80,
+                160
+            ],
+            "num_classes": 3
+        }
+    }
+}

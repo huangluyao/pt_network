@@ -1,0 +1,19 @@
+{
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "model": {
+        "type": "FaceNetClassifier",
+        "backbone": {
+            "type": "ResNet",
+            "depth": 18,
+            "out_levels": [5],
+            "num_classes": 512
+        },
+        "head": {
+            "type": "FaceNetHead",
+            "loss": {"type": "CrossEntropyLoss"},
+            "in_channel": 512,
+            "embedding_size": 128,
+            "num_classes": 17
+        }
+    }
+}

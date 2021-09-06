@@ -1,0 +1,45 @@
+{
+    "__base__": [
+        "tools/config/augmentation/base_augmentation.json"
+    ],
+    "task": "classification",
+    "gpu_id": 0,
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.0001
+    },
+    "dataset": {
+        "input_size": [
+            224,
+            224
+        ],
+        "type": "ClsDataSet",
+        "train_data_path": "/media/hly/Samsung_T51/py_code/Classification/database/damage_dataset/train",
+        "val_data_path": "/media/hly/Samsung_T51/py_code/Classification/database/damage_dataset/val"
+    },
+    "loader_cfg": {
+        "batch_size": 8,
+        "num_workers": 0
+    },
+    "scheduler": {
+        "warm_up_epochs": 5,
+        "max_epochs": 100,
+        "lr_decay_method": "polynomial_decay_restarts",
+        "cycle_epoch": 30,
+        "cycle_radio": 0.7,
+        "power": 3
+    },
+    "model": {
+        "type": "ImageClassifier",
+        "backbone": {
+            "type": "resnet50d",
+            "num_classes": 8
+        },
+        "head": {
+            "type": "ClsHead",
+            "loss": {"type": "CrossEntropyLoss"},
+            "metric": {"type": "Accuracy", "topk": [1, 5]}
+        }
+    }
+}

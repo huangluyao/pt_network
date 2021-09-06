@@ -1,0 +1,19 @@
+{
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "out_levels": [3, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "STDCHead",
+            "in_channels": [128, 256, 512],
+            "conv_out_inplanes": 128,
+            "final_drop": 0,
+            "head_width": 64,
+            "loss": {"type": "OhemCELoss", "thresh":0.7,
+                    "stride": 16,
+                    "ignore_lb": 255}
+        }
+    }
+}

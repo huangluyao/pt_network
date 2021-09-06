@@ -1,0 +1,39 @@
+{
+    "_base_": "../../../_base_/models/fcos/fcos.json",
+    "pretrained": "model_zoo/pth/backbone/efficientnet/efficientnetv2_rw_t.pth",
+    "model": {
+        "backbone": {
+            "type": "EfficientNetv2_tiny",
+            "out_levels": [3, 4, 5 ]
+        },
+        "neck": {
+            "type": "CSP_PAN",
+            "input_channels": [48, 104, 208],
+            "output_channels": [128, 128, 128],
+            "strides": [8, 16, 32],
+            "act_cfg": {"type": "SiLU"},
+            "norm_cfg":{"type":"BN", "requires_grad":false}
+        },
+        "bbox_head": {
+            "type": "FCOSHead",
+            "num_classes": 1,
+            "in_channels": 128,
+            "feat_channels": 128,
+            "stacked_convs": 2,
+            "strides": [8,16,32],
+            "regress_ranges":[[-1,64],[64,128],[128,256]]
+        },
+
+        "train_cfg":
+        {
+            "score_thr":0.3,
+            "nms":  0.3,
+            "max_per_img": 100
+        },
+        "test_cfg":
+        {
+            "score_thr":0.3
+        }
+
+    }
+}

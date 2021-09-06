@@ -1,0 +1,15 @@
+{
+    "pretrained": "model_zoo/pth/backbone/efficientnet/efficientnetv2_rw_t.pth",
+    "model": {
+        "type": "ImageClassifier",
+        "backbone": {
+            "type": "EfficientNetv2_tiny",
+            "out_levels": [5]
+        },
+        "head": {
+            "type": "ClsHead",
+            "loss": {"type": "CrossEntropyLoss"},
+            "metric": {"type": "Accuracy", "topk": [1, 5]}
+        }
+    }
+}

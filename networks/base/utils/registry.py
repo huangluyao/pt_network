@@ -1,0 +1,185 @@
+from abc import ABCMeta
+import inspect
+import warnings
+from functools import partial
+
+
+class ABCRegistry(metaclass=ABCMeta):
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        if cls is ABCRegistry:
+            if any("register_module" in B.__dict__ for B in subclass.__mro__):
+                return True
+        return NotImplemented
+
+
+class Registry(ABCRegistry):
+    """A registry to map strings to classes.
+
+    Parameters
+    ----------
+    name : str
+        Registry name.
+    """
+
+    def __init__(self, name):
+        self._name = name
+        self._module_dict = dict()
+
+    def __len__(self):
+        return len(self._module_dict)
+
+    def __contains__(self, key):
+        return self.get(key) is not None
+
+    def __repr__(self):
+        format_str = self.__class__.__name__ + \
+                     f'(name={self._name}, ' \
+                     f'items={self._module_dict})'
+        return format_str
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def module_dict(self):
+        return self._module_dict
+
+    def get(self, key):
+        """Get the registry record.
+
+        Parameters
+        ----------
+        key : str
+            The class name in string format.
+
+        Returns
+        -------
+        module_class : class
+            The corresponding class.
+        """
+        return self._module_dict.get(key, None)
+
+    def _register_module(self, module_class, module_name=None, force=False):
+        if not inspect.isclass(module_class):
+            raise TypeError('module must be a class, '
+                            f'but got {type(module_class)}')
+
+        if module_name is None:
+            module_name = module_class.__name__
+        if not force and module_name in self._module_dict:
+            raise KeyError(f'{module_name} is already registered '
+                           f'in {self.name}')
+        self._module_dict[module_name] = module_class
+
+    def register_module(self, name=None, force=False, module=None):
+        """Register a module.
+
+        A record will be added to `self._module_dict`, whose key is the class
+        name or the specified name, and value is the class itself.
+        It can be used as a decorator or a normal function.
+
+        Parameters
+        ----------
+        name : str, optional
+            The module name to be registered.
+            If not specified, the class name will be used.
+        force: bool, optional
+            Whether to override an existing class with the same name.
+        module: type
+            Module class to be registered.
+
+        Examples
+        --------
+        >>> BACKBONES = Registry('backbone')
+        >>> @BACKBONES.register_module(name='resnet')
+        >>> class ResNet:
+        >>>     pass
+
+        >>> class ResNet:
+        >>>     pass
+        >>> BACKBONES.register_module(name='resnet', module=ResNet)
+        """
+        if not isinstance(force, bool):
+            raise TypeError(f'force must be a boolean, but got {type(force)}')
+
+        if module is not None:
+            self._register_module(
+                module_class=module, module_name=name, force=force)
+            return module
+
+        if not (name is None or isinstance(name, str)):
+            raise TypeError(f'name must be a str, but got {type(name)}')
+
+        def _register(cls):
+            self._register_module(
+                module_class=cls, module_name=name, force=force)
+            return cls
+
+        return _register
+
+
+def build_from_cfg(cfg, registry, default_args=None):
+    """Build a module from config dict.
+
+    Parameters
+    ----------
+    cfg : dict
+        Config dict. It should at least contain the key "type".
+    registry : :obj:`Registry`
+        The registry to search the type from.
+    default_args : dict, optional
+        Default initialization arguments.
+
+    Returns
+    -------
+    module_obj : object
+        The constructed object.
+
+    Examples
+    --------
+    >>> BACKBONES = Registry('backbone')
+    >>> def build_backbone(cfg):
+    >>>     build_from_cfg(cfg, BACKBONES, default_args=None)
+    >>> backbone = build_backbone(cfg.model.backbone)
+    """
+    if not isinstance(cfg, dict):
+        raise TypeError(f'cfg must be a dict, but got {type(cfg)}')
+    if 'type' not in cfg:
+        raise KeyError(
+            f'the cfg dict must contain the key "type", but got {cfg}')
+    if not isinstance(registry, Registry):
+        raise TypeError('registry must be an Registry object, '
+                        f'but got {type(registry)}')
+    if not (isinstance(default_args, dict) or default_args is None):
+        raise TypeError('default_args must be a dict or None, '
+                        f'but got {type(default_args)}')
+
+    args = cfg.copy()
+    module_type = args.pop('type')
+    if isinstance(module_type, str):
+        module_obj = registry.get(module_type)
+        if module_obj is None:
+            raise KeyError(
+                f'{module_type} is not in the {registry.name} registry')
+    elif inspect.isclass(module_type):
+        module_obj = module_type
+    else:
+        raise TypeError(
+            f'type must be a str or valid type, but got {type(module_type)}')
+
+    if default_args is not None:
+        for name, value in default_args.items():
+            args.setdefault(name, value)
+    return module_obj(**args)
+
+
+def build_module(cfg, registry, default_args=None):
+    if isinstance(cfg, list):
+        modules = [
+            build_from_cfg(cfg_, registry, default_args) for cfg_ in cfg
+        ]
+        return nn.Sequential(*modules)
+    else:
+        return build_from_cfg(cfg, registry, default_args)

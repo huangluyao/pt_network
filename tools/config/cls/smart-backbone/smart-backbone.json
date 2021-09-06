@@ -1,0 +1,18 @@
+{
+    "__base__": [
+        "tools/config/__base__/base.json",
+        "configs/cls/models/smart-backbone/smart-backbone.json",
+        "tools/config/__base__/augmentation/base_augmentation.json"
+    ],
+    "task": "classification",
+    "gpu_id": 0,
+    "dataset": {
+        "input_size": [
+            224,
+            224
+        ],
+        "type": "ClsDataSet",
+        "train_data_path": "E:\\datasets\\huangluyao\\classification\\dog_cat\\train",
+        "val_data_path": "E:\\datasets\\huangluyao\\classification\\dog_cat\\val"
+    }
+}

@@ -1,0 +1,154 @@
+{
+  "downsample3x3": true, 
+  "deep_stem": true, 
+  "avg_down": true, 
+  "stage_blocks": [
+    3, 
+    4, 
+    6, 
+    3
+  ], 
+  "stem_channels": [
+    16, 
+    16, 
+    32
+  ], 
+  "stage_channels": {
+    "layer1": [
+      {
+        "in_channels": 32, 
+        "out_channels": [
+          16, 
+          8, 
+          32
+        ]
+      }, 
+      {
+        "in_channels": 32, 
+        "out_channels": [
+          8, 
+          8, 
+          32
+        ]
+      }, 
+      {
+        "in_channels": 32, 
+        "out_channels": [
+          8, 
+          8, 
+          32
+        ]
+      }
+    ], 
+    "layer2": [
+      {
+        "in_channels": 32, 
+        "out_channels": [
+          16, 
+          72, 
+          128
+        ]
+      }, 
+      {
+        "in_channels": 128, 
+        "out_channels": [
+          72, 
+          72, 
+          128
+        ]
+      }, 
+      {
+        "in_channels": 128, 
+        "out_channels": [
+          72, 
+          104, 
+          128
+        ]
+      }, 
+      {
+        "in_channels": 128, 
+        "out_channels": [
+          64, 
+          40, 
+          128
+        ]
+      }
+    ], 
+    "layer3": [
+      {
+        "in_channels": 128, 
+        "out_channels": [
+          32, 
+          80, 
+          320
+        ]
+      }, 
+      {
+        "in_channels": 320, 
+        "out_channels": [
+          64, 
+          104, 
+          320
+        ]
+      }, 
+      {
+        "in_channels": 320, 
+        "out_channels": [
+          136, 
+          200, 
+          320
+        ]
+      }, 
+      {
+        "in_channels": 320, 
+        "out_channels": [
+          128, 
+          216, 
+          320
+        ]
+      }, 
+      {
+        "in_channels": 320, 
+        "out_channels": [
+          104, 
+          112, 
+          320
+        ]
+      }, 
+      {
+        "in_channels": 320, 
+        "out_channels": [
+          120, 
+          96, 
+          320
+        ]
+      }
+    ], 
+    "layer4": [
+      {
+        "in_channels": 320, 
+        "out_channels": [
+          56, 
+          64, 
+          1920
+        ]
+      }, 
+      {
+        "in_channels": 1920, 
+        "out_channels": [
+          512, 
+          504, 
+          1920
+        ]
+      }, 
+      {
+        "in_channels": 1920, 
+        "out_channels": [
+          504, 
+          456, 
+          1920
+        ]
+      }
+    ]
+  }
+}

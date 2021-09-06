@@ -1,0 +1,13 @@
+{
+    "_base_": "./deeplabv3_s8.json",
+    "model": {
+        "backbone": {
+            "strides": [1, 2, 2, 1],
+            "dilations": [1, 1, 1, 2],
+            "multi_grid": [1, 2, 4]
+        },
+        "decode_head": {
+            "dilations": [1, 6, 12, 18]
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "_base_": "../../../_base_/models/bisenet/bisenet.json",
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "model": {
+        "backbone": {
+            "type": "ResNet",
+            "depth": 18,
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": [
+                3,
+                256,
+                512
+            ]
+        }
+    }
+}

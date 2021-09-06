@@ -1,0 +1,9 @@
+opencv-python
+termcolor
+addict
+tqdm
+regex
+six
+matplotlib
+thop
+timm

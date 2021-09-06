@@ -1,0 +1,6 @@
+{
+    "__base__": ["configs/det/models/FCOS/FCOS_smart-backbone_csp-pan.json",
+                "tools/config/__base__/augmentation/base_augmentation.json",
+                "tools/config/__base__/det_base.json"],
+    "task": "detection"
+}

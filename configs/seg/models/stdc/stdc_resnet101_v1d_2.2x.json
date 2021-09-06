@@ -1,0 +1,18 @@
+{
+    "_base_":"../../../_base_/models/stdc/stdc.json",
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet101_v1d_0.73.pth",
+    "model": {
+        "backbone": {
+            "type": "PrunedResNet",
+            "model_name": "resnet101_v1d_0.73",
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": [
+                200,
+                392,
+                2048
+            ]
+        }
+    }
+}

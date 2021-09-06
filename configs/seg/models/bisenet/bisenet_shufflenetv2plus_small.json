@@ -1,0 +1,18 @@
+{
+    "_base_": "../../../_base_/models/bisenet/bisenet.json",
+    "pretrained": "nas://model_zoo/pth/shufflenet/ShuffleNetV2+.Small.pth.tar",
+    "model": {
+        "backbone": {
+            "type": "ShuffleNetV2Plus",
+            "size": "Small",
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": [
+                3,
+                208,
+                416
+            ]
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "pretrained": "nas://model_zoo/pth/gluoncv/ResNet34_v1.pth",
+    "model": {
+        "type": "ImageClassifier",
+        "backbone": {
+            "type": "ResNet",
+            "depth": 34,
+            "out_levels": [5],
+            "num_classes": 1000
+        },
+        "head": {
+            "type": "ClsHead",
+            "loss": {"type": "CrossEntropyLoss"},
+            "metric": {"type": "Accuracy", "topk": [1, 5]}
+        }
+    }
+}

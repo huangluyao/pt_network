@@ -1,0 +1,18 @@
+{
+    "_base_": "../../../_base_/models/unet/unet.json",
+    "pretrained": "model_zoo/pth/backbone/resnet/ResNet101_v1d.pth",
+    "model": {
+        "backbone": {
+            "type": "ResNetV1d",
+            "depth": 101,
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": [
+                512,
+                1024,
+                2048
+            ]
+        }
+    }
+}

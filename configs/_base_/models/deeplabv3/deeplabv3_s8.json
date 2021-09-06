@@ -1,0 +1,35 @@
+{
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "strides": [1, 2, 1, 1],
+            "dilations": [1, 1, 2, 4],
+            "contract_dilation": true,
+            "out_levels": [2, 3, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "DeepLabV3Head",
+            "in_channels": 2048,
+            "in_index": 3,
+            "head_width": 512,
+            "dilations": [1, 12, 24, 36],
+            "final_drop": 0.1,
+            "num_classes": 32,
+            "align_corners": true,
+            "loss": {"type": "CrossEntropyLoss", "loss_weight": 1.0}
+        },
+        "auxiliary_head": {
+            "type": "FCNHead",
+            "in_channels": 1024,
+            "in_index": 2,
+            "head_width": 256,
+            "num_convs": 1,
+            "concat_input": false,
+            "final_drop": 0.1,
+            "num_classes": 32,
+            "align_corners": true,
+            "loss": {"type": "CrossEntropyLoss", "loss_weight": 0.4}
+        }
+    }
+}

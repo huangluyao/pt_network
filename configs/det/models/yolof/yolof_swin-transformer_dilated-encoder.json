@@ -1,0 +1,27 @@
+{
+    "_base_": "../../../_base_/models/yolof/yolof.json",
+    "model": {
+        "type": "YOLOF",
+        "pretrained": "model_zoo/pth/backbone/swin_transfomer/swin_small_patch4_window7_224.pth",
+        "backbone": {
+            "type": "SwinTransformer",
+            "patch_size": 4,
+            "embed_dim":96,
+            "depths":[2, 2, 18, 2],
+            "num_heads":[3, 6, 12, 24],
+            "window_size":7,
+            "ape":false,
+            "drop_path_rate":0.3,
+            "patch_norm":true,
+            "use_checkpoint":false,
+            "out_levels": [5]
+        },
+        "neck": {
+            "type": "DilatedEncoder",
+            "in_channels": 768,
+            "out_channels": 512,
+            "block_mid_channels": 128,
+            "num_residual_blocks": 4
+        }
+    }
+}
