@@ -3,6 +3,7 @@
 # @date 2021/8/10 下午6:30
 import os.path
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.ticker import MultipleLocator
 
 
@@ -43,3 +44,29 @@ def draw_plot(metrics, save_path):
         plt.savefig(file_name)
         plt.clf()
         plt.close()
+
+def draw_per_classes(metric_name, metrics, class_names, save_path):
+    plt.figure(figsize=(20, 12))
+    plt.title(metric_name)
+    x_epoch = range(1, len(metrics) + 1)
+    xytext = (+30, +10)
+    for idx in range(len(class_names)):
+        xytexts = [(xytext[0] + 10 * idx, xytext[1] + 20 * idx) for idx in range(len(class_names))]
+        plt.plot(x_epoch, metrics[:, idx], '', label=class_names[idx])
+        pos_iou = np.where(metrics[:, idx] == max(metrics[:, idx]))[0]
+        if len(pos_iou) > 1:
+            pos_iou = [pos_iou[-1]]
+        for x in pos_iou:
+            draw_point(x_epoch[x], max(metrics[:, idx]), string="(%s,%.4f)" % ('max', max(metrics[:, idx])),
+                       xytext=xytexts[idx])
+
+    plt.legend(loc='best')
+    plt.xlabel('epoch')
+    plt.ylabel(metric_name)
+    plt.grid()
+    file_name = os.path.join(save_path, metric_name)
+    plt.savefig(file_name)
+    plt.clf()
+    plt.close()
+
+

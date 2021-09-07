@@ -1,6 +1,8 @@
 import os
 import torch
+import random
 import tempfile
+import numpy as np
 from networks.cls import build_classifier
 from networks.det import build_detector
 from networks.seg import build_segmentor
@@ -13,6 +15,16 @@ from ..engine.optimizer import build_optimizer, build_scheduler
 from ..engine.simple_trainer import SimplerTrainer
 
 def cfg2trainer(cfg, logger):
+
+    # 设置随机种子
+    seed = cfg.get("seed", None)
+    if seed is not None:
+        logger.info('state random seed : %d' % (seed))
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)  # 为CPU设置种子用于生成随机数，以使得结果是确定的   　　
+        torch.cuda.manual_seed(seed)  # 为当前GPU设置随机种子；
+        torch.backends.cudnn.deterministic = True
 
     # 初始化训练设备
     init_distributed_mode(cfg)

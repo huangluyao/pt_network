@@ -21,7 +21,7 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default="tools/config/seg/dla/smart-backbone_dla.json",
+                        default="tools/config/det/fcos/smart-backbone_csp-pan_qfcos.json",
                         type=str)
     parser.add_argument('-p', '--pretrained', type=str,
                         default='',
@@ -41,8 +41,14 @@ def setup():
             if isinstance(config[key], dict):
                 logger.info(f'{prefix} {key}')
                 show_config_values(config[key], prefix='    '+prefix)
+            elif isinstance(config[key], list):
+                if len(config[key]) >0 and isinstance(config[key][0], dict):
+                    for info_dict in config[key]:
+                        logger.info(f'{prefix} {key.ljust(20) + str(info_dict)}')
             else:
                 logger.info(f'{prefix} {key.ljust(20) + str(config[key])}')
+
+
 
     logger.info('-' * 25 + 'log info'+'-' * 25)
     show_config_values(cfg)

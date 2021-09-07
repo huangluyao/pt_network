@@ -16,6 +16,7 @@ class OptimizerHook(Hook):
             return clip_grad.clip_grad_norm_(params, **self.grad_clip)
 
     def after_train_iter(self, runner):
+        runner.model.zero_grad()
         runner.optimizer.zero_grad()
         runner.outputs['loss'].backward()
         if self.grad_clip is not None:

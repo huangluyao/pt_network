@@ -4,7 +4,7 @@ import math
 import torch
 from .base_eval_hooks import BaseEvalHook
 from ..metrics import *
-from ..draw_plot import draw_plot
+from ..draw_plot import draw_plot, draw_per_classes
 from ...engine.hooks import HOOKS
 
 
@@ -12,11 +12,12 @@ from ...engine.hooks import HOOKS
 class DetEvalHook(BaseEvalHook):
     def __init__(self, class_names, performance_dir, model_name, input_size,
                  metric='f1',
-                 vis_score_threshold=0.5,
+                 vis_score_threshold=0.3,
                  **kwargs):
         super(DetEvalHook, self).__init__(**kwargs)
         assert metric in ["f1", "accuracy", "acc"], "metric best be f1 or accuracy but got {}".format(metric)
         self.vis_score_threshold = vis_score_threshold
+        self.max_number_gt = kwargs.get("max_number_gt", 100)
         self.input_size = input_size
         self._ap_per_epoch = []
         self.class_names = class_names
@@ -35,8 +36,7 @@ class DetEvalHook(BaseEvalHook):
             os.makedirs(self.performance_dir)
 
     def evaluate(self,learning_rate, avg_losses, dataloader, model, threshold=None, logger=None, **kwargs):
-        max_number_gt = kwargs.get("max_number_gt", dataloader.dataset.max_number_object_per_img)
-        confidence_threshold = kwargs.get("confidence_threshold", 0.5)
+        confidence_threshold = kwargs.get("confidence_threshold", self.vis_score_threshold)
         model.eval()
         img_paths = []
         for step, (img_batch, label_batch) in enumerate(dataloader):
@@ -51,8 +51,8 @@ class DetEvalHook(BaseEvalHook):
                 if len(boxes) ==0 :
                     boxes = np.empty(shape=(0, 4))
                 gt_label = np.concatenate([boxes, index], axis=-1)
-                if gt_label.shape[0] < max_number_gt:
-                    padding = np.zeros([max_number_gt - gt_label.shape[0], gt_label.shape[1]])
+                if gt_label.shape[0] < self.max_number_gt:
+                    padding = np.zeros([self.max_number_gt - gt_label.shape[0], gt_label.shape[1]])
                     padding[...,-1] =-1
                     label = np.concatenate([gt_label, padding], axis=0)
                 batch_label.append(label)
@@ -115,6 +115,9 @@ class DetEvalHook(BaseEvalHook):
                         )
         draw_plot(metrices, os.path.dirname(self._metric_vs_epoch_file))
 
+        metrics = np.stack(self._ap_per_epoch, axis=0)
+
+        draw_per_classes("ap_per_classes", metrics, self.class_names,  os.path.dirname(self._metric_vs_epoch_file))
 
     def is_val_best_epoch(self):
         major_metrics = self._ap_per_epoch
