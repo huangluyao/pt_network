@@ -6,11 +6,11 @@
         "weight_decay": 0.0001
     },
     "dataset": {
-        "input_size": [224, 224],
-        "type": "SegDataset",
+        "input_size": [640, 640],
+        "type": "DetectionDataset",
         "use_mosaic": false,
-        "train_data_path": "E:/datasets/huangluyao/segmentation/white_blood_cell/train",
-        "val_data_path": "E:/datasets/huangluyao/segmentation/white_blood_cell/val",
+        "train_data_path": "E:/datasets/huangluyao/detection/plane_car/train",
+        "val_data_path": "E:/datasets/huangluyao/detection/plane_car/val",
         "statistics_data": {
             "means": [108.825, 116.744, 115.917],
             "stds": [56.843, 55.318, 56.83]
@@ -42,7 +42,7 @@
             "grad_clip": null
         },
         {
-            "type": "SegEvalHook",
+            "type": "DetEvalHook",
             "start": null,
             "evaluation_first": true,
             "interval": 1
