@@ -42,7 +42,10 @@ class BaseEvalHook(Hook):
 
         self.evaluate(param_group["lr"],
                 epoch_loss, self.dataloader,
-                runner.model, logger=runner.logger)
+                runner.model,
+                runner,
+                logger=runner.logger,
+                )
 
         self.total_epoch_losses = []
 
@@ -61,5 +64,5 @@ class BaseEvalHook(Hook):
 
         return True
 
-    def evaluate(self,learning_rate, avg_losses, dataloader, model, threshold=None, logger=None, **kwargs):
+    def evaluate(self,learning_rate, avg_losses, dataloader, model, runner=None, threshold=None, logger=None, **kwargs):
         raise InterruptedError

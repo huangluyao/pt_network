@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 from .base_dense_head import BaseDenseHead
-from ..builder import build_loss, HEADS
+from networks.det.models.builder import build_loss, HEADS
 from ..utils.bbox import build_bbox_coder, build_sampler, build_assigner, multiclass_nms
 from ..utils.anchor import build_anchor_generator
 from ..utils import multi_apply

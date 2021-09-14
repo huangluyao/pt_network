@@ -49,6 +49,9 @@ def init_distributed_mode(cfg):
 
     torch.cuda.set_device(cfg.gpu)
     cfg.dist_backend = 'nccl'
+    cfg.dist_url = cfg.get("dist_url", "env://")
+    cfg.world_size = cfg.get("world_size", 1)
     dist.init_process_group(backend=cfg.dist_backend, init_method=cfg.dist_url,
                             world_size=cfg.world_size, rank=cfg.rank)
     dist.barrier()
+

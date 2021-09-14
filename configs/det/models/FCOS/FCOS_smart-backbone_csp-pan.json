@@ -3,14 +3,14 @@
     "pretrained": "model_zoo/pth/backbone/smart/smart.pth",
     "model": {
         "backbone": {
-            "type": "DSNet",
+            "type": "SmartBackbone",
             "depth_multiple": 0.33,
             "width_multiple": 0.50,
             "num_classes": null,
             "act_cfg": {"type": "SiLU"},
-            "norm_cfg":{"type":"BN", "requires_grad":false},
+            "norm_cfg":{"type":"BN", "requires_grad":true},
             "out_levels": [3, 4, 5 ],
-            "use_transformer": true
+            "use_transformer": false
         },
         "neck": {
             "type": "CSP_PAN",
@@ -18,7 +18,7 @@
             "output_channels": [128, 128, 128],
             "strides": [8, 16, 32],
             "act_cfg": {"type": "SiLU"},
-            "norm_cfg":{"type":"BN", "requires_grad":false}
+            "norm_cfg":{"type":"BN", "requires_grad":true}
         },
         "bbox_head": {
             "type": "FCOSHead",

@@ -54,9 +54,6 @@ def setup_logger(
         output = os.path.join(output)
     cfg.update({"output_dir": output})
 
-    if not os.path.exists(output):
-        mkdir(output)
-
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
@@ -83,13 +80,14 @@ def setup_logger(
         ch.setFormatter(formatter)
         logger.addHandler(ch)
 
-
-    filename = os.path.join(output, "log.txt")
-    if distributed_rank > 0:
-        filename = filename + ".rank{}".format(distributed_rank)
-    file_handler = logging.FileHandler(filename)
-    file_handler.setFormatter(plain_formatter)
-    logger.addHandler(file_handler)
+        if not os.path.exists(output):
+            mkdir(output)
+        filename = os.path.join(output, "log.txt")
+        if distributed_rank > 0:
+            filename = filename + ".rank{}".format(distributed_rank)
+        file_handler = logging.FileHandler(filename)
+        file_handler.setFormatter(plain_formatter)
+        logger.addHandler(file_handler)
 
     return logger
 

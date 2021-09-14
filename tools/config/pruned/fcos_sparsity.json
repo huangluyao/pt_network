@@ -1,0 +1,46 @@
+{
+    "__base__": ["configs/det/models/FCOS/FCOS_smart-backbone_csp-pan.json",
+                "tools/config/__base__/augmentation/base_augmentation.json",
+                "tools/config/__base__/det_base.json"],
+    "task": "detection",
+
+    "loader_cfg": {
+        "batch_size": 4,
+        "num_workers": 0
+    },
+
+    "hook_cfgs": [
+      {
+          "type": "CosineRestartLrUpdaterHook",
+          "min_lr": 1e-6,
+          "by_epoch": true,
+          "warmup": null,
+          "warmup_iters": 0,
+          "warmup_ratio": 0.1,
+          "periods": [30, 30],
+          "restart_weights": [1, 1]
+      },
+      {
+          "type": "OptimizerSparsityHook",
+          "sr": 0.001,
+          "grad_clip": null,
+          "interval": 10
+      },
+      {
+          "type": "DetEvalHook",
+          "start": null,
+          "evaluation_first": false,
+          "interval": 1,
+          "vis_score_threshold": 0.3
+      },
+      {
+          "type": "IterTimerHook"
+      }
+    ],
+
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.0001
+    }
+}

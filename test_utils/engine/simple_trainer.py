@@ -18,6 +18,7 @@ class SimplerTrainer(TrainerBase):
     def run_iter(self, img_batch, label_batch=None, return_metrics=True):
         outputs = self.model(img_batch, return_metrics=return_metrics,
                             ground_truth=label_batch)
+
         if not isinstance(outputs, dict):
             raise TypeError('"batch_processor()" or "model.train_step()"'
                             'and "model.val_step()" must return a dict')
@@ -46,7 +47,10 @@ class SimplerTrainer(TrainerBase):
         while self.epoch < self.max_epochs:
             self.train(**kwargs)
 
-        # time.sleep(1)  # 等待其他的 hook 完成
+        # 等待其他进程完成
+        if self.device != torch.device("cpu"):
+            torch.cuda.synchronize(self.device)
+
         self.after_train()
 
     def train(self, **kwargs):
@@ -54,17 +58,26 @@ class SimplerTrainer(TrainerBase):
         self._max_iters = self.max_epochs * len(self.data_loader)
         self.before_train_epoch()
         self.model.train()
-        # time.sleep(2)
+
+        # 等待其他进程完成
+        if self.device != torch.device("cpu"):
+            torch.cuda.synchronize(self.device)
+
         for i, (img_batch, label_batch) in enumerate(self.data_loader):
             if not isinstance(img_batch, torch.Tensor):
-                img_batch = torch.from_numpy(img_batch).to(self.model.device, dtype=torch.float32)
-            if img_batch.device != self.model.device:
-                img_batch = img_batch.to(self.model.device)
+                img_batch = torch.from_numpy(img_batch).to(self.device, dtype=torch.float32)
+            if img_batch.device != self.device:
+                img_batch = img_batch.to(self.device)
             self.inner_iter = i
             self.before_train_iter()
             self.run_iter(img_batch, label_batch, return_metrics=True)
             self.after_train_iter()
+
             self.iter += 1
+
+        # 等待其他进程完成
+        if self.device != torch.device("cpu"):
+            torch.cuda.synchronize(self.device)
 
         self.after_train_epoch()
         self._epoch += 1

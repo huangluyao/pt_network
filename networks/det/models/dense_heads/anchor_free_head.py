@@ -3,8 +3,7 @@ import torch
 import torch.nn as nn
 from .base_dense_head import BaseDenseHead
 from base.cnn.components.conv_module import ConvModule
-from base.cnn.components.blocks import C3
-from ..builder import HEADS, build_loss
+from networks.det.models.builder import HEADS, build_loss
 from base.cnn.utils import normal_init, bias_init_with_prob
 from ..utils import multi_apply
 @HEADS.register_module()

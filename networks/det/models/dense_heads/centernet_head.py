@@ -1,9 +1,8 @@
 # _*_coding=utf-8 _*_
 # @author Luyao Huang
 # @date 2021/6/28 上午9:28
-import torch
 import torch.nn as nn
-from ..builder import HEADS, build_loss
+from networks.det.models.builder import HEADS, build_loss
 from .base_dense_head import BaseDenseHead
 from base.cnn.utils.weight_init import bias_init_with_prob, normal_init
 from ..utils import multi_apply

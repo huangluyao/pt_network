@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from base.cnn import ConvModule
 
-from ..builder import NECKS
+from networks.det.models.builder import NECKS
 
 
 class DetectionBlock(nn.Module):

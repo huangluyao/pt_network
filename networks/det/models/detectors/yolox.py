@@ -1,7 +1,7 @@
 # _*_coding=utf-8 _*_
 # @author Luyao Huang
 # @date 2021/7/31 下午1:45
-from ..builder import DETECTORS
+from networks.det.models.builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 

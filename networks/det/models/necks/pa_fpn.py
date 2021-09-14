@@ -6,9 +6,8 @@ import math
 import torch
 import torch.nn as nn
 from base.cnn import ConvModule, DepthwiseSeparableConvModule
-from mmcv.runner import BaseModule
 
-from ..builder import NECKS
+from networks.det.models.builder import NECKS
 
 
 @NECKS.register_module()

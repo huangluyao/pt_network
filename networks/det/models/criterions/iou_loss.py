@@ -3,7 +3,7 @@ import math
 import torch.nn as nn
 from .utils import weight_reduce_loss
 from ..utils.bbox.iou2d_calculator import bbox_overlaps
-from ..builder import LOSSES
+from networks.det.models.builder import LOSSES
 
 
 def iou_loss(pred, target, xyxy=True, linear=False, eps=1e-6):

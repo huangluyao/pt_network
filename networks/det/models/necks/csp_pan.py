@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from base.cnn import ConvModule
 from base.cnn.components.blocks.comm_blocks import C3
-from ..builder import NECKS
+from networks.det.models.builder import NECKS
 
 
 @NECKS.register_module()
@@ -68,7 +68,8 @@ class CSP_PAN(nn.Module):
         num_level = len(features)
         # up sample
         for i in range(1,num_level):
-            tmp = getattr(self, f'conv_up{i}')(features[-i])
+            input = features[-i] if i==1 else tmp
+            tmp = getattr(self, f'conv_up{i}')(input)
             temps.append(tmp)
             if self.use_trans_conv:
                 tmp = getattr(self,f'trans_conv{i}')(tmp)

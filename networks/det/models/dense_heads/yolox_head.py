@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from ..utils.bbox import bbox_overlaps
 from .anchor_free_head import AnchorFreeHead
 from ..utils import multi_apply, multiclass_nms
-from ..builder import HEADS, build_loss
+from networks.det.models.builder import HEADS, build_loss
 
 
 @HEADS.register_module()

@@ -1,13 +1,12 @@
 # _*_coding=utf-8 _*_
 # @author Luyao Huang
 # @date 2021/6/28 下午4:51
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from ..utils.ops import ConcatCell
 from base.cnn.components.conv_module import ConvModule
 from base.cnn.utils import caffe2_xavier_init
-from ..builder import NECKS
+from networks.det.models.builder import NECKS
 
 
 @NECKS.register_module()

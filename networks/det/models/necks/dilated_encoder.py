@@ -2,7 +2,7 @@
 # @author Luyao Huang
 # @date 2021/6/29 下午5:38
 import torch.nn as nn
-from ..builder import NECKS
+from networks.det.models.builder import NECKS
 from base.cnn.components.conv_module import ConvModule
 from base.cnn.utils import caffe2_xavier_init, constant_init, normal_init
 from base.cnn.components.norm import is_norm

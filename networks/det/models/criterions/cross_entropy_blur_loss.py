@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .utils import weight_reduce_loss
 from .cross_entropy_loss import _expand_onehot_labels
-from ..builder import LOSSES
+from networks.det.models.builder import LOSSES
 
 
 def cross_entropy_blur_loss(pred, label, alpha,

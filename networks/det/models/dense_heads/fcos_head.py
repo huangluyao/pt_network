@@ -3,9 +3,9 @@ import torch, copy
 import torch.nn as nn
 import torch.nn.functional as F
 from ..utils.bbox import distance2bbox, multiclass_nms
-from ..builder import HEADS, build_loss
+from networks.det.models.builder import HEADS, build_loss
 from base.cnn.components.conv_module import ConvModule
-from ....base.cnn.utils.weight_init import normal_init
+from base.cnn.utils.weight_init import normal_init
 from .anchor_free_head import AnchorFreeHead
 from ..utils import multi_apply, Scale, bbox_overlaps
 INF = 1e8
@@ -86,7 +86,8 @@ class FCOSHead(AnchorFreeHead):
             output_dir = kwargs["train_cfg"].get("output_dir", None)
             if output_dir is not None:
                 self.output_file = os.path.join(output_dir, "vis_point")
-                os.makedirs(self.output_file)
+                if not os.path.exists(self.output_file):
+                    os.makedirs(self.output_file)
             else:
                 self.debug = False
         else:

@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..builder import LOSSES
+from networks.det.models.builder import LOSSES
 from .utils import weight_reduce_loss
 
 

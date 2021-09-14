@@ -10,10 +10,11 @@ from .seresnet import SEResNet
 from .seresnext import SEResNeXt
 from .shufflenet_v2 import ShuffleNetV2
 from .shufflenet_v2_plus import ShuffleNetV2Plus
-from .dsnet import DSNet
+from .dsnet import SmartBackbone
 from .utils import *
 from .mobilenetv3 import MobileNetV3
 from .swin_transformer import SwinTransformer
 from .efficientnet import EfficientNetv2_tiny
+from .pruned_smart_backbone import PrunedSmartBackbone
 
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

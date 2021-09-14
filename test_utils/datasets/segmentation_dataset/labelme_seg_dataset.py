@@ -92,7 +92,7 @@ if __name__=="__main__":
     json_path = "tools/config/augmentation/base_augmentation.json"
     with open(json_path, 'r') as f:
         cfg = json.load(f)
-    test = LabelMeSegDataset(data_path, cfg["dataset"]["augmentations"], "train")
+    test = SegDataset(data_path, cfg["dataset"]["augmentations"], "train")
 
     std = np.array([0.229,0.224,0.225])
     mean =np.array([0.485,0.456,0.406])

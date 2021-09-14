@@ -12,13 +12,17 @@ class TrainerBase(metaclass=ABCMeta):
 
     def __init__(self,
                  model,
+                 cfg=None,
+                 device="cpu",
                  optimizer=None,
                  max_iters=None,
                  max_epochs=None,
                  work_dir=None,
                  logger=None,
+                 rank=0,
                  **kwargs
                 ):
+        self.device = device
         # check Args
         if max_epochs is not None and max_iters is not None:
             raise ValueError(
@@ -30,15 +34,18 @@ class TrainerBase(metaclass=ABCMeta):
         else:
             raise TypeError(f'"work_dir" must be a str or None, or not find f{work_dir}"')
 
+        self.cfg = cfg
         self._hooks = []
         self._epoch = 0
         self.iter = 0
+        self.rank = rank
         self.inner_iter = 0
         self.max_epochs = max_epochs
         self.max_iters = max_iters
         self.model = model
         self.optimizer = optimizer
         self.logger = logger
+        self.output_dir = work_dir
         # get model name from the model class
         if hasattr(self.model, 'module'):
             self._model_name = self.model.module.__class__.__name__

@@ -5,6 +5,7 @@ import os.path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MultipleLocator
+from collections import  Counter
 
 
 def draw_point(x, y, string, xytext):
@@ -45,7 +46,7 @@ def draw_plot(metrics, save_path):
         plt.clf()
         plt.close()
 
-def draw_per_classes(metric_name, metrics, class_names, save_path):
+def draw_per_classes(metric_name, metrics, class_names, save_path, is_max=True):
     plt.figure(figsize=(20, 12))
     plt.title(metric_name)
     x_epoch = range(1, len(metrics) + 1)
@@ -57,7 +58,11 @@ def draw_per_classes(metric_name, metrics, class_names, save_path):
         if len(pos_iou) > 1:
             pos_iou = [pos_iou[-1]]
         for x in pos_iou:
-            draw_point(x_epoch[x], max(metrics[:, idx]), string="(%s,%.4f)" % ('max', max(metrics[:, idx])),
+            if is_max:
+                draw_point(x_epoch[x], max(metrics[:, idx]), string="(%s,%.4f)" % ('max', max(metrics[:, idx])),
+                       xytext=xytexts[idx])
+            else:
+                draw_point(x_epoch[x], min(metrics[:, idx]), string="(%s,%.4f)" % ('min', max(metrics[:, idx])),
                        xytext=xytexts[idx])
 
     plt.legend(loc='best')
@@ -69,4 +74,39 @@ def draw_per_classes(metric_name, metrics, class_names, save_path):
     plt.clf()
     plt.close()
 
+
+def static_bn(bn_numpy, save_path):
+    round_bn = np.round(bn_numpy, 1)
+    round_bn = Counter(round_bn)
+
+    keys = sorted(round_bn.keys())
+
+    x = np.round(np.arange(keys[0], keys[-1], 0.1),1).astype(bn_numpy.dtype)
+
+    y = []
+    index = 0
+    for key in x:
+        if key in keys:
+            y.append(round_bn[key])
+            index +=1
+        else:
+            y.append(0)
+
+    plt.title("bn static")
+    plt.figure(figsize=(8, 4))
+    # 一个图表中画多个图
+    plt.xlabel ("number")
+    plt.ylabel ("count")
+
+    plt.bar(x, y, width=0.07)
+    plt.savefig(save_path)
+    plt.close()
+
+    txtresutl = save_path.replace("png", "txt")
+    with open(txtresutl, "w") as f:
+        for number_x, number_y in zip(x, y):
+            number_x = str(number_x)
+            number_y = str(number_y)
+
+            f.write(number_x+"\t"+number_y+"\n")
 

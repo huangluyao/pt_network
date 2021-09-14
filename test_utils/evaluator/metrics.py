@@ -248,4 +248,4 @@ def model_info(model, img_size=640):
     except (ImportError, Exception):
         fs = ''
 
-    return f"Model Summary: {len(list(model.modules()))} layers, {n_p} parameters, {n_g} gradients{fs}"
+    return f"Model Summary: {len(list(model.modules()))} layers, {n_p} parameters, size {(n_p * 4 / 1024) /1024:.2f} (MB) {fs}"

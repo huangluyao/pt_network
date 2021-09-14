@@ -96,7 +96,7 @@ class rSoftMax(nn.Module):
     def forward(self, x):
         batch = x.size(0)
         if self.radix > 1:
-            x = x.view(batch, self.cardinality, self.radix, -1).transpose(1, 2)
+            x = x.view(batch, self.cardinality, self.radix, -1).transpose(1, 2).contiguous()
             x = F.softmax(x, dim=1)
             x = x.reshape(batch, -1)
         else:

@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from ..builder import NECKS
+from networks.det.models.builder import NECKS
 from base.cnn.components.conv_module import ConvModule
 from base.cnn.utils import xavier_init
 

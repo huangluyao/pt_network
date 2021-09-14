@@ -16,7 +16,7 @@ def make_divisible(x, divisor):
 
 
 @BACKBONES.register_module()
-class DSNet(nn.Module):
+class SmartBackbone(nn.Module):
 
     def __init__(self, in_channels,
                  stage_channels=[64, 128, 256, 512, 1024],
@@ -30,7 +30,7 @@ class DSNet(nn.Module):
                  num_classes=None,
                  **kwargs
                  ):
-        super(DSNet, self).__init__()
+        super(SmartBackbone, self).__init__()
 
         assert len(block_numbers) > 3, "len of block numbers should be list and greater than 3"
 

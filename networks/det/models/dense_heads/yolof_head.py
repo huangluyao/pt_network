@@ -6,7 +6,7 @@ import torch.nn as nn
 from base.cnn.utils import constant_init, normal_init, bias_init_with_prob
 from base.cnn.components.norm import is_norm
 from base.cnn.components.conv_module import ConvModule
-from ..builder import build_loss, HEADS
+from networks.det.models.builder import HEADS
 from ..utils import multi_apply, anchor_inside_flags, unmap
 from .anchor_head import AnchorHead
 

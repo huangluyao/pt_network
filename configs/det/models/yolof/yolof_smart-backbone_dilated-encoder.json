@@ -4,7 +4,7 @@
     "model": {
         "type": "YOLOF",
         "backbone": {
-            "type": "DSNet",
+            "type": "SmartBackbone",
             "in_channels": 3,
             "depth_multiple": 0.33,
             "width_multiple": 0.50,

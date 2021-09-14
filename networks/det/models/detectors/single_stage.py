@@ -1,8 +1,7 @@
-import torch
 import torch.nn as nn
 
 from .base import BaseDetector
-from ..builder import DETECTORS, build_backbone, build_head, build_neck
+from networks.det.models.builder import DETECTORS, build_backbone, build_head, build_neck
 
 
 @DETECTORS.register_module()
@@ -22,8 +21,10 @@ class SingleStageDetector(BaseDetector):
                  pretrained=None, **kwargs):
         super(SingleStageDetector, self).__init__()
         self.backbone = build_backbone(backbone)
+
         if neck is not None:
             self.neck = build_neck(neck)
+
         bbox_head.update(train_cfg=train_cfg)
         bbox_head.update(test_cfg=test_cfg)
         self.bbox_head = build_head(bbox_head)

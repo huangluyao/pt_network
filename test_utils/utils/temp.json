@@ -23,19 +23,19 @@
     },
 
     "use_ema":false,
-    "max_epochs": 5,
+    "max_epochs": 60,
     "max_iters": null,
 
     "hook_cfgs": [
         {
             "type": "CosineRestartLrUpdaterHook",
-            "min_lr": 1e-5,
+            "min_lr": 1e-6,
             "by_epoch": true,
-            "warmup": "linear",
-            "warmup_iters": 500,
+            "warmup": null,
+            "warmup_iters": 0,
             "warmup_ratio": 0.1,
-            "periods": [75, 60],
-            "restart_weights": [1, 0.5]
+            "periods": [30, 30],
+            "restart_weights": [1, 1]
         },
         {
             "type": "OptimizerHook",
@@ -44,8 +44,9 @@
         {
             "type": "DetEvalHook",
             "start": null,
-            "evaluation_first": true,
-            "interval": 1
+            "evaluation_first": false,
+            "interval": 1,
+            "vis_score_threshold": 0.3
         },
         {
             "type": "IterTimerHook"

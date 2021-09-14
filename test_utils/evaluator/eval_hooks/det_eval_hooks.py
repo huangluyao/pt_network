@@ -35,14 +35,15 @@ class DetEvalHook(BaseEvalHook):
         if not os.path.exists(self.performance_dir):
             os.makedirs(self.performance_dir)
 
-    def evaluate(self,learning_rate, avg_losses, dataloader, model, threshold=None, logger=None, **kwargs):
+    def evaluate(self,learning_rate, avg_losses, dataloader, model, runner,
+                 threshold=None, logger=None, **kwargs):
         confidence_threshold = kwargs.get("confidence_threshold", self.vis_score_threshold)
         model.eval()
         img_paths = []
         for step, (img_batch, label_batch) in enumerate(dataloader):
             img_paths += label_batch['image_path']
             if not isinstance(img_batch, torch.Tensor):
-                img_batch = torch.from_numpy(img_batch).to(model.device, dtype=torch.float32)
+                img_batch = torch.from_numpy(img_batch).to(runner.device, dtype=torch.float32)
             pred = model(img_batch)
 
             batch_label = []
@@ -82,42 +83,44 @@ class DetEvalHook(BaseEvalHook):
         self._ap_per_epoch.append(AP_of_classes)
         self._cur_epoch = len(self._ap_per_epoch)
 
-        logger.info("Validation metric per class:")
-        logger.info('class_name'.ljust(15,' ') + 'AP'.ljust(15,' '))
 
-        metric_per_class = np.stack([
-            AP_of_classes
-        ], axis=0)
-        for idx in range(self.num_classes):
-            metric_list = list(metric_per_class[:, idx])
-            metric_list = list(map(lambda x: '{:6.4f}'.format(x).ljust(15, ' '), metric_list))
-            metric_str = ''.join(metric_list)
-            logger.info(self.class_names[idx].ljust(15, ' ') + metric_str)
-        if self.is_val_best_epoch():
-            prefix = 'Best performance so far, '
-            self.visualize(img_paths, y_prob)
-            logger.info("Saving checkpoint of best validation metrics.")
-            # save checkpoint
-            state = {
-                'arch': type(model).__name__,
-                'epoch': self._cur_epoch,
-                'state_dict': model.state_dict(),
-            }
-            torch.save(state, "%s/val_best.pth" % (self._checkpoint_dir))
-        else:
-            prefix = ''
-        logger.info(prefix + 'mAP = %.4f' % np.mean(AP_of_classes))
+        if runner.rank ==0:
+            logger.info("Validation metric per class:")
+            logger.info('class_name'.ljust(15,' ') + 'AP'.ljust(15,' '))
 
-        mean_metrics = [sum(x) / len(x) for x in self._ap_per_epoch]
-        metrices = dict(mAP=mean_metrics,
-                        loss=self._avg_loss_per_epoch,
-                        learning_rate=self._lr_per_epoch
-                        )
-        draw_plot(metrices, os.path.dirname(self._metric_vs_epoch_file))
+            metric_per_class = np.stack([
+                AP_of_classes
+            ], axis=0)
+            for idx in range(self.num_classes):
+                metric_list = list(metric_per_class[:, idx])
+                metric_list = list(map(lambda x: '{:6.4f}'.format(x).ljust(15, ' '), metric_list))
+                metric_str = ''.join(metric_list)
+                logger.info(self.class_names[idx].ljust(15, ' ') + metric_str)
+            if self.is_val_best_epoch():
+                prefix = 'Best performance so far, '
+                self.visualize(img_paths, y_prob)
+                logger.info("Saving checkpoint of best validation metrics.")
+                # save checkpoint
+                state = {
+                    'arch': type(model).__name__,
+                    'epoch': self._cur_epoch,
+                    'state_dict': model.state_dict(),
+                }
+                torch.save(state, "%s/val_best.pth" % (self._checkpoint_dir))
+            else:
+                prefix = ''
+            logger.info(prefix + 'mAP = %.4f' % np.mean(AP_of_classes))
 
-        metrics = np.stack(self._ap_per_epoch, axis=0)
+            mean_metrics = [sum(x) / len(x) for x in self._ap_per_epoch]
+            metrices = dict(mAP=mean_metrics,
+                            loss=self._avg_loss_per_epoch,
+                            learning_rate=self._lr_per_epoch
+                            )
+            draw_plot(metrices, os.path.dirname(self._metric_vs_epoch_file))
 
-        draw_per_classes("ap_per_classes", metrics, self.class_names,  os.path.dirname(self._metric_vs_epoch_file))
+            metrics = np.stack(self._ap_per_epoch, axis=0)
+
+            draw_per_classes("ap_per_classes", metrics, self.class_names,  os.path.dirname(self._metric_vs_epoch_file))
 
     def is_val_best_epoch(self):
         major_metrics = self._ap_per_epoch
@@ -130,6 +133,7 @@ class DetEvalHook(BaseEvalHook):
 
     def visualize(self, img_paths, predictions):
         num_preds = len(img_paths)
+
         if not os.path.exists(self.vis_predictions_dir):
             os.makedirs(self.vis_predictions_dir)
         vis_paths = [os.path.join(self.vis_predictions_dir, 'pred_%03d.png'%(idx)) for idx in range(num_preds)]
@@ -151,7 +155,9 @@ class DetEvalHook(BaseEvalHook):
 
         self.evaluate(param_group["lr"],
                 epoch_loss, self.dataloader,
-                runner.model, logger=runner.logger)
+                runner.model,
+                runner,
+                logger=runner.logger)
 
         self.total_epoch_losses = []
 
@@ -160,7 +166,31 @@ class DetEvalHook(BaseEvalHook):
         mean_metrics = [sum(x) / len(x) for x in major_metrics]
         best_metric = max(mean_metrics)
         best_index = mean_metrics.index(best_metric)
-        runner.logger.info(f"the best metric acc is {best_metric}, at epoch {best_index}")
+        runner.logger.info("the best metric acc is %.4f, at epoch %d" % (best_metric, best_index))
+
+@HOOKS.registry()
+class PrunedDetEvalHook(DetEvalHook):
+    def __init__(self, **kwargs):
+        super(PrunedDetEvalHook, self).__init__(**kwargs)
+        self.epochs = []
+        self.flops = []
+        self.sizes = []
+        self.mAPs = []
+
+    def after_train_epoch(self, runner):
+        super(PrunedDetEvalHook, self).after_train_epoch(runner)
+
+        model_params = model_info(runner.model, runner.cfg.input_size)
+        runner.logger.info(model_params)
+
+        info_list = model_params.split(" ")
+        self.flops.append(float(info_list[-2]))
+        self.sizes.append(float(info_list[-5]))
+        self.mAPs.append(self._ap_per_epoch[-1].mean() * 100)
+
+        metircs = np.array([self.flops, self.sizes, self.mAPs]).transpose([1, 0])
+        save_path = self.vis_predictions_dir = os.path.join(self.performance_dir)
+        draw_per_classes("pruned", metrics=metircs, class_names=["flops", "size", "mAP"], save_path=save_path)
 
 
 def resize_box(org_size, inptut_size, boxes):
