@@ -5,9 +5,9 @@ import torch
 
 from .train_base import TrainerBase
 from .utils import get_host_info
+from .builder import RUNNERS
 
-
-
+@RUNNERS.register_module()
 class SimplerTrainer(TrainerBase):
     def __init__(self, train_dataloader, **kwargs):
         super(SimplerTrainer, self).__init__(**kwargs)

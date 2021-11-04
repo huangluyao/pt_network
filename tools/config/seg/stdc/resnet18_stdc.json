@@ -1,38 +1,8 @@
 {
     "__base__": [
         "configs/seg/models/stdc/stdc_resnet18.json",
-        "tools/config/augmentation/base_augmentation.json"
+        "tools/config/__base__/augmentation/base_augmentation.json",
+        "tools/config/__base__/seg_base.json"
     ],
-    "task": "segmentation",
-    "gpu_id": 0,
-    "optimizer": {
-        "type": "AdamW",
-        "lr": 0.001,
-        "weight_decay": 0.0001
-    },
-    "dataset": {
-        "input_size": [
-            224,
-            224
-        ],
-        "type": "LabelMeSegDataset",
-        "train_data_path": "/media/hly/Samsung_T51/datasets/huangluyao/segmentation/df_new/train",
-        "val_data_path": "/media/hly/Samsung_T51/datasets/huangluyao/segmentation/df_new/val",
-        "statistics_data": {
-            "means": [105.658, 103.33, 99.625],
-            "stds": [76.705, 77.813, 75.613]
-        }
-    },
-    "loader_cfg": {
-        "batch_size": 8,
-        "num_workers": 8
-    },
-    "scheduler": {
-        "warm_up_epochs": 5,
-        "max_epochs": 105,
-        "lr_decay_method": "cosine_annealing_restarts",
-        "cycle_epoch": 30,
-        "cycle_radio": 0.7,
-        "power": 3
-    }
+    "task": "segmentation"
 }

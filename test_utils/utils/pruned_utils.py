@@ -20,6 +20,8 @@ def get_bn_weights(model, ignore_bn_list):
     module_list = []
     module_bias_list = []
     for i, layer in model.named_modules():
+        if "Head" in layer._get_name():
+            break
         if isinstance(layer, nn.BatchNorm2d) and i not in ignore_bn_list:
             bnw = layer.state_dict()['weight']
             bnb = layer.state_dict()['bias']
@@ -57,6 +59,8 @@ def get_model_list(model):
                 ignore_bn_list.append(i.rsplit(".",2)[0]+".cv1.bn")
                 ignore_bn_list.append(i + '.cv1.bn')
                 ignore_bn_list.append(i + '.cv2.bn')
+        elif "Head" in layer._get_name():
+            break
         if isinstance(layer, nn.BatchNorm2d):
             if i not in ignore_bn_list:
                 model_list[i] = layer
@@ -130,12 +134,18 @@ def pruned_model_load_state(mask_bn_dict, pruned_model, model):
                 changed_state.append(pruned_layername + ".weight")
 
         elif isinstance(pruned_layer, nn.BatchNorm2d):
-            out_idx = np.squeeze(np.argwhere(mask_bn_dict[pruned_layername].detach().cpu().numpy()))
             layer = old_model_dict[pruned_layername]
-            pruned_layer.weight.data = layer.weight.data[out_idx].clone()
-            pruned_layer.bias.data = layer.bias.data[out_idx].clone()
-            pruned_layer.running_mean = layer.running_mean[out_idx].clone()
-            pruned_layer.running_var = layer.running_var[out_idx].clone()
+            if pruned_layername in mask_bn_dict.keys():
+                out_idx = np.squeeze(np.argwhere(mask_bn_dict[pruned_layername].detach().cpu().numpy()))
+                pruned_layer.weight.data = layer.weight.data[out_idx].clone()
+                pruned_layer.bias.data = layer.bias.data[out_idx].clone()
+                pruned_layer.running_mean = layer.running_mean[out_idx].clone()
+                pruned_layer.running_var = layer.running_var[out_idx].clone()
+            else:
+                pruned_layer.weight.data = layer.weight.data.clone()
+                pruned_layer.bias.data = layer.bias.data.clone()
+                pruned_layer.running_mean = layer.running_mean.clone()
+                pruned_layer.running_var = layer.running_var.clone()
 
             changed_state.append(pruned_layername + ".weight")
             changed_state.append(pruned_layername + ".bias")

@@ -4,7 +4,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import argparse
 import json
 from collections import OrderedDict
-from test_utils.utils import setup_logger, fromfile, cfg2trainer
+from test_utils.utils import setup_logger, fromfile
+from test_utils.utils.cfg2trainer import cfg2trainer
 from test_utils.utils import init_distributed_mode, dist
 
 
@@ -21,10 +22,10 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default="tools/config/pruned/qfcos_pruned.json",
+                        default="tools/config/gan/style_gan2.json",
                         type=str)
     parser.add_argument('-p', '--pretrained', type=str,
-                        default='export/detection/FCOS_SmartBackbone_CSP_PAN_DetectionDataset/2021-09-13-08-05-17/checkpoints/val_best.pth',
+                        default='',
                         help='initial weights path')
 
     args = parser.parse_args()
@@ -54,6 +55,8 @@ def setup():
 
     logger.info('-' * 25 + 'log info'+'-' * 25)
     show_config_values(cfg)
+
+
     return cfg, logger
 
 

@@ -163,3 +163,5 @@ class EncoderDecoder(BaseSegmentor):
         else:
             seg_probs = torch.sigmoid(seg_logit)
         return seg_probs
+
+

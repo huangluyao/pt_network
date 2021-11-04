@@ -1,0 +1,45 @@
+{
+    "__base__": ["configs/det/models/yolox/smart-backbone_csp-pan.json",
+                "tools/config/__base__/augmentation/base_augmentation.json",
+                "tools/config/__base__/det_base.json"],
+    "task": "detection",
+
+    "loader_cfg": {
+        "batch_size": 4,
+        "num_workers": 0
+    },
+    "max_epochs": 60,
+
+    "hook_cfgs": [
+      {
+          "type": "OptimizerSparsityHook",
+          "sr": 0.001,
+          "grad_clip": null,
+          "interval": 10,
+          "stop_sparsity_epoch": 50
+      },
+      {
+          "type": "PrunedDetEvalHook",
+          "start": null,
+          "evaluation_first": false,
+          "interval": 1,
+          "vis_score_threshold": 0.3,
+          "priority": "LOW"
+      },
+      {
+          "type": "IterTimerHook"
+      },
+      {
+        "type": "PrunedHook",
+        "interval": 5,
+        "percent": 0.16,
+        "start_finetune_epoch": 50
+      }
+    ],
+
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.00001,
+        "weight_decay": 0.0001
+    }
+}

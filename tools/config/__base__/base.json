@@ -2,7 +2,7 @@
     "gpu_id": 0,
     "optimizer": {
         "type": "AdamW",
-        "lr": 0.001,
+        "lr": 0.0001,
         "weight_decay": 0.0001
     },
     "dataset": {
@@ -23,7 +23,7 @@
     },
 
     "use_ema":false,
-    "max_epochs": 5,
+    "max_epochs": 50,
     "max_iters": null,
 
     "hook_cfgs": [
@@ -42,10 +42,11 @@
             "grad_clip": null
         },
         {
-            "type": "ClassEvalHook",
+            "type": "ClsEvalHook",
             "start": null,
             "evaluation_first": false,
-            "interval": 1
+            "interval": 1,
+            "kwargs": {"sample_model": "ema/orig"}
         },
         {
             "type": "IterTimerHook"

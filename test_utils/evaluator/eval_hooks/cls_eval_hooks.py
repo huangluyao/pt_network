@@ -112,7 +112,7 @@ class ClsEvalHook(BaseEvalHook):
                 metric_list = list(metric_per_class[:,idx])
                 metric_list = list(map(lambda x: '{:6.4f}'.format(x).ljust(15,' ') ,metric_list))
                 metric_str = ''.join(metric_list)
-                logger.info(model.class_names[idx].ljust(max_len,' ') + metric_str)
+                logger.info(self.class_names[idx].ljust(max_len,' ') + metric_str)
 
             if self.is_val_best_epoch():
                 prefix = 'Best performance so far, '

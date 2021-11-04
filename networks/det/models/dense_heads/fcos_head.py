@@ -458,7 +458,7 @@ class FCOSHead(AnchorFreeHead):
         gt_bboxes_per_image = gt_bboxes
         if num_gts == 0:
             return gt_labels.new_full([num_points], self.num_classes), \
-                   gt_bboxes.new_zeros([num_points, 4])
+                   gt_bboxes.new_zeros([num_points, 4]), gt_bboxes.new_zeros(0)
 
         # compute boxes area
         areas = (gt_bboxes[:, 2] - gt_bboxes[:, 0]) * (
@@ -586,7 +586,7 @@ class FCOSHead(AnchorFreeHead):
     def dynamic_k_matching(self, cost, pair_wise_ious):
         matching_matrix = torch.zeros_like(cost)
         ious_in_boxes_matrix = pair_wise_ious
-        n_candidate_k = 10
+        n_candidate_k = 10 if ious_in_boxes_matrix.shape[1] > 10 else ious_in_boxes_matrix.shape[1]
         topk_ious, _ = torch.topk(ious_in_boxes_matrix, n_candidate_k, dim=1)
         dynamic_ks = torch.clamp(topk_ious.sum(1).int(), min=1)
 

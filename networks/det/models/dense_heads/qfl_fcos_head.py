@@ -449,7 +449,7 @@ class QFCOSHead(AnchorFreeHead):
         gt_bboxes_per_image = gt_bboxes
         if num_gts == 0:
             return gt_labels.new_full([num_points], self.num_classes), \
-                   gt_bboxes.new_zeros([num_points, 4])
+                   gt_bboxes.new_zeros([num_points, 4]), gt_bboxes.new_zeros(0)
 
         # compute boxes area
         areas = (gt_bboxes[:, 2] - gt_bboxes[:, 0]) * (
@@ -472,7 +472,7 @@ class QFCOSHead(AnchorFreeHead):
         bbox_targets = torch.stack((left, top, right, bottom), -1)
 
         # condition1: inside a gt bbox
-        inside_gt_bbox_mask = bbox_targets.min(-1)[0] > 0
+        inside_gt_bbox_mask = bbox_targets.min(-1)[0] >= 0
         # condition 2: limit the regression range for each location
         max_regress_distance = bbox_targets.max(-1)[0]
         inside_regress_range = (
@@ -507,7 +507,7 @@ class QFCOSHead(AnchorFreeHead):
 
             bbox_preds = distance2bbox(points, bbox_preds)[pos_inds]
             pair_wise_ious = bbox_overlaps(gt_bboxes_per_image, bbox_preds)
-            pred_ious_this_matching = pair_wise_ious.max(0)[0]
+            pred_ious_this_matching = pair_wise_ious.max(0)[0] if len(bbox_preds) > 0 else bbox_preds.new_zeros(0)
 
         return labels, bbox_targets, pred_ious_this_matching
 

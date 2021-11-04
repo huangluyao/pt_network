@@ -1,0 +1,25 @@
+{
+    "__base__": ["configs/gan/models/pggan/pggan.json",
+                "tools/config/__base__/gan_base.json"
+    ],
+
+    "task": "gan",
+
+    "loader_cfg": {
+        "batch_size": 4,
+        "num_workers": 0
+    },
+    "max_iters": 50000,
+    "max_epochs": null,
+
+    "hook_cfgs": [
+      {
+          "type": "IterGANTimerHook"
+      },
+      {
+        "type": "ExponentialMovingAverageHook",
+        "module_keys":"generator_ema",
+        "interval":1
+      }
+    ]
+}

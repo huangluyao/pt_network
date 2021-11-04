@@ -35,23 +35,29 @@ class SELayer(nn.Module):
                  ratio=16,
                  conv_cfg=None,
                  norm_cfg=(None, None),
-                 act_cfg=(dict(type='ReLU'), dict(type='Sigmoid'))):
+                 act_cfg=(dict(type='ReLU'), dict(type='Sigmoid')),
+                 rd_round_fn=None
+                 ):
         super(SELayer, self).__init__()
         if isinstance(act_cfg, dict):
             act_cfg = (act_cfg, act_cfg)
         assert len(act_cfg) == 2
         assert is_seq_of(act_cfg, dict)
         self.global_avgpool = nn.AdaptiveAvgPool2d(1)
+
+        if rd_round_fn is None:
+            rd_round_fn = round
+        mid_channels = rd_round_fn(channels / ratio)
         self.conv1 = ConvModule(
             in_channels=channels,
-            out_channels=int(channels / ratio),
+            out_channels=mid_channels,
             kernel_size=1,
             stride=1,
             conv_cfg=conv_cfg,
             norm_cfg=norm_cfg[0],
             act_cfg=act_cfg[0])
         self.conv2 = ConvModule(
-            in_channels=int(channels / ratio),
+            in_channels=mid_channels,
             out_channels=channels,
             kernel_size=1,
             stride=1,

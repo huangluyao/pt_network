@@ -1,0 +1,27 @@
+{
+    "__base__": [
+        "tools/config/__base__/base.json",
+        "configs/cls/models/mobilnetv3/mobilenetv3.json",
+        "tools/config/__base__/augmentation/base_augmentation.json"
+    ],
+    "task": "classification",
+    "gpu_id": 0,
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.0001
+    },
+    "dataset": {
+        "input_size": [
+            224,
+            224
+        ],
+        "type": "ClsDataSet",
+        "train_data_path": "E:\\datasets\\huangluyao\\classification\\dog_cat\\train",
+        "val_data_path": "E:\\datasets\\huangluyao\\classification\\dog_cat\\val"
+    },
+    "loader_cfg": {
+        "batch_size": 8,
+        "num_workers": 0
+    }
+}

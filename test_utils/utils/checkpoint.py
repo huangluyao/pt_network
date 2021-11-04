@@ -51,8 +51,17 @@ def load_checkpoint(model,
     """
     checkpoint = _load_checkpoint(filename, map_location)
     if not isinstance(checkpoint, dict):
-        raise RuntimeError(
-            f'No state_dict found in checkpoint file {filename}')
+        if type(checkpoint) == type(model):
+            model_state_dict = model.state_dict()
+            load_state_dict = checkpoint.state_dict()
+            for key, weight in load_state_dict.items():
+                if model_state_dict[key].shape == weight.shape:
+                    model_state_dict[key] = weight
+            model.load_state_dict(model_state_dict)
+            return checkpoint
+        else:
+            raise RuntimeError(
+                f'No state_dict found in checkpoint file {filename}')
     if 'state_dict' in checkpoint:
         state_dict = checkpoint['state_dict']
     else:

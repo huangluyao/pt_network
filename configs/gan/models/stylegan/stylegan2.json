@@ -1,0 +1,42 @@
+{
+  "model":
+  {
+      "type": "StaticUnconditionalGAN",
+      "generator":
+      {
+        "type": "StyleGANv2Generator",
+        "out_size": 256,
+        "style_channels": 512,
+        "channel_multiplier": 1
+      },
+      "discriminator":
+      {
+        "type": "StyleGAN2Discriminator", "in_size": 256, "channel_multiplier": 1
+      },
+      "gan_loss":
+      {
+        "type": "WGANLossNS"
+      },
+      "disc_auxiliary_loss":
+      {
+        "type": "R1GradientPenalty",
+        "loss_weight": 80.0,
+        "interval": 1,
+        "norm_mode": "HWC",
+        "data_info":
+        {
+          "real_data": "real_imgs", "discriminator": "disc"
+        }
+      },
+      "gen_auxiliary_loss":
+      {
+        "type": "GeneratorPathRegularizer",
+        "loss_weight": 8.0,
+        "pl_batch_shrink": 2,
+        "interval": 1,
+        "data_info": {"generator": "gen", "num_batches": "batch_size"}
+    },
+     "train_cfg": {"use_ema": true},
+     "test_cfg": null
+  }
+}

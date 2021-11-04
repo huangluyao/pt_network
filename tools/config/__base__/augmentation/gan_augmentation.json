@@ -1,0 +1,19 @@
+{
+  "dataset": {
+    "augmentations": {
+      "train": [
+          {"type": "Resize", "height": 640, "width": 640, "always_apply": true, "padding": false},
+          {"type": "RandomFlip", "prob": 0.5, "direction": "horizontal"},
+          {"type": "Rotate", "limit": [-5,5], "prob": 0.5},
+          {"type": "Normalize", "mean": [127.5,127.5,127.5], "std": [127.5, 127.5, 127.5], "scale": 1,"always_apply": true}
+        ],
+
+      "val": [
+          {"type": "Resize", "height": 224, "width": 224, "always_apply": true},
+          {"type": "Normalize","mean": [127.5,127.5,127.5], "std": [127.5, 127.5, 127.5], "scale": 1,"always_apply": true}
+        ],
+      "no use": [
+        ]
+    }
+  }
+}

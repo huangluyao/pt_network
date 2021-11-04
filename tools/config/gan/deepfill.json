@@ -1,0 +1,61 @@
+{
+    "__base__": ["configs/gan/models/deepfill/deepfillv2.json",
+                "tools/config/__base__/gan_base.json"
+    ],
+
+    "task": "gan",
+    "gpu_id": 3,
+    "loader_cfg": {
+        "batch_size": 4,
+        "num_workers": 0
+    },
+    "max_iters": 50000,
+    "max_epochs": null,
+
+    "optimizers":
+    {
+      "generator": {"type": "Adam", "lr": 0.0001},
+      "disc": {"type": "Adam", "lr": 0.0001}
+    },
+
+    "hook_cfgs": [
+      {
+          "type": "IterGANTimerHook"
+      },
+      {
+          "type": "ImageInpaintingVisualizationHook",
+          "output_dir": "training_samples",
+          "interval": 100,
+          "res_name_list":[
+                        "image",
+                        "masked_img",
+                        "stage1_fake_res",
+                        "stage1_fake_img",
+                        "stage2_fake_res",
+                        "stage2_fake_img",
+                        "fake_gt_local"],
+          "nrow": 1
+      },
+      {
+        "type": "CheckpointHook",
+        "interval": 1000,
+        "by_epoch": false
+      }
+    ],
+
+    "dataset": {
+      "input_size": [224, 224],
+      "type": "ImageInpaintingDataset",
+      "use_mosaic": false,
+      "train_data_path": "E:\\datasets\\huangluyao\\detection\\cai_qie_bu_liang\\train",
+      "statistics_data": {
+          "means": [127.5,127.5,127.5],
+          "stds": [127.5,127.5,127.5]
+      },
+      "augmentations":[
+        {"type": "Resize", "height": 640, "width": 640, "always_apply": true, "padding": false},
+        {"type": "RandomFlip", "prob": 0.5, "direction": "horizontal"},
+        {"type": "Normalize", "mean": [127.5,127.5,127.5], "std": [127.5,127.5,127.5], "scale": 1,"always_apply": true}
+     ]
+  }
+}

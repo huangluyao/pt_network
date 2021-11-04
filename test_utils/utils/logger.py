@@ -36,7 +36,7 @@ def setup_logger(
     cur_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
 
     task_name = cfg['model'].get('type', None)
-    backbone_name = cfg['model'].get('backbone').get('type', None)
+    backbone_name = cfg['model'].get('backbone', dict()).get('type', None)
     neck_name = cfg['model'].get('neck', None)
     head_name = cfg['model'].get("decode_head", None)
     datasets_name = cfg['dataset'].get('type')

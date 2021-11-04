@@ -1,0 +1,10 @@
+{
+  "model": {
+    "type": "ProgressiveGrowingGAN",
+    "generator": {"type": "PGGANGenerator", "out_scale": 128, "noise_size":512},
+    "discriminator": {"type": "PGGANDiscriminator", "in_scale": 128},
+    "gan_loss": {"type": "WGANLoss"},
+    "shift_loss": {"type": "DiscShiftLoss", "loss_weight": 0.0005},
+    "gp_loss": {"type": "GradientPenaltyLoss", "loss_weight": 10}
+  }
+}

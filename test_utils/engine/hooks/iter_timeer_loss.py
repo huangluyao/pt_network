@@ -27,3 +27,23 @@ class IterTimerHook(Hook):
             for key in outputs:
                 step_status += ' %s: %7.4f' % (key, outputs[key].detach().cpu().numpy())
             runner.logger.info(step_status)
+
+
+@HOOKS.registry()
+class IterGANTimerHook(IterTimerHook):
+    def after_iter(self, runner):
+        step_time =  time.time() - self.t
+        # 等待所有进程计算完毕
+        if runner.device != torch.device("cpu"):
+            torch.cuda.synchronize(runner.device)
+
+        outputs = runner.outputs['log_vars']
+
+        if runner.inner_iter % 10 == 0:
+            step_status = '=> Step %6d \tTime %5.2f \t[Loss]:' % (
+                runner.inner_iter, step_time)
+
+            for key in outputs:
+                if 'loss' in key:
+                    step_status += ' %s: %7.4f' % (key, outputs[key])
+            runner.logger.info(step_status)

@@ -108,6 +108,8 @@ class PrunedHook(Hook):
                     # print("bn_module:", bn_module.bias)
                     runner.logger.info(
                         f"|\t{bnname:<35}{'|':<10}{bn_module.weight.data.size()[0]:<10}{'|':<10}{int(mask.sum()):<10}|")
+                elif "Head" in bnlayer._get_name():
+                    break
             runner.logger.info("=" * 79)
 
             # 剪枝结束

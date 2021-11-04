@@ -35,6 +35,7 @@ class DetEvalHook(BaseEvalHook):
         if not os.path.exists(self.performance_dir):
             os.makedirs(self.performance_dir)
 
+    @torch.no_grad()
     def evaluate(self,learning_rate, avg_losses, dataloader, model, runner,
                  threshold=None, logger=None, **kwargs):
         confidence_threshold = kwargs.get("confidence_threshold", self.vis_score_threshold)
@@ -189,8 +190,7 @@ class PrunedDetEvalHook(DetEvalHook):
         self.mAPs.append(self._ap_per_epoch[-1].mean() * 100)
 
         metircs = np.array([self.flops, self.sizes, self.mAPs]).transpose([1, 0])
-        save_path = self.vis_predictions_dir = os.path.join(self.performance_dir)
-        draw_per_classes("pruned", metrics=metircs, class_names=["flops", "size", "mAP"], save_path=save_path)
+        draw_per_classes("pruned", metrics=metircs, class_names=["flops", "size", "mAP"], save_path=self.performance_dir)
 
 
 def resize_box(org_size, inptut_size, boxes):

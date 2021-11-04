@@ -1,0 +1,53 @@
+{
+    "__base__": ["configs/gan/models/stylegan/stylegan2.json",
+                "tools/config/__base__/gan_base.json"
+    ],
+
+    "task": "gan",
+    "gpu_id": 3,
+    "loader_cfg": {
+        "batch_size": 4,
+        "num_workers": 0
+    },
+    "max_iters": 50000,
+    "max_epochs": null,
+
+    "hook_cfgs": [
+      {
+          "type": "IterGANTimerHook"
+      },
+      {
+        "type": "ExponentialMovingAverageHook",
+        "module_keys": "generator_ema",
+        "interval": 1
+      },
+      {
+          "type": "VisualizeUnconditionalSamples",
+          "output_dir": "training_samples",
+          "interval": 100,
+          "nrow": 4,
+          "sample_model": "ema/orig"
+      },
+      {
+        "type": "CheckpointHook",
+        "interval": 1000,
+        "by_epoch": false
+      }
+    ],
+
+    "dataset": {
+      "input_size": [128, 128],
+      "type": "GANDataset",
+      "use_mosaic": false,
+      "train_data_path": "data/gan/df",
+      "statistics_data": {
+          "means": [127.5,127.5,127.5],
+          "stds": [127.5,127.5,127.5]
+      },
+      "augmentations":[
+        {"type": "Resize", "height": 640, "width": 640, "always_apply": true, "padding": false},
+        {"type": "RandomFlip", "prob": 0.5, "direction": "horizontal"},
+        {"type": "Normalize", "mean": [127.5,127.5,127.5], "std": [127.5,127.5,127.5], "scale": 1,"always_apply": true}
+     ]
+  }
+}

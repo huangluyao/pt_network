@@ -1,0 +1,22 @@
+{
+
+  "model": {
+    "type": "MSPIEStyleGAN2",
+    "generator": {
+      "type": "MSStyleGANv2Generator",
+       "out_size": 256,
+       "style_channels": 512,
+       "head_pos_encoding": null,
+       "deconv2conv": true,
+       "up_after_conv": true,
+       "head_pos_size": [4, 2],
+       "interp_head": true,
+       "up_config": {"scale_factor": 2, "mode": "bilinear", "align_corners": true}
+    },
+    "discriminator": {
+      "type": "MSStyleGAN2Discriminator",
+      "in_size": 256,
+      "with_adaptive_pool": true
+    }
+  }
+}

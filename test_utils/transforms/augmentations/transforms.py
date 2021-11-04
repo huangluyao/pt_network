@@ -28,7 +28,7 @@ class Resize(BasicTransform):
 
     def apply_to_mask(self, img, **params):
         return padding_resize_mask(img, (self.height, self.width)) if self.padding else \
-            resize(img, self.height, self.width, self.interpolation)
+            resize(img, self.height, self.width, cv2.INTER_NEAREST)
 
     def get_params(self, **params):
         return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}

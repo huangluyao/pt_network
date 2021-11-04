@@ -1,6 +1,8 @@
 import os
 import cv2
 import math
+
+import numpy as np
 import torch
 from .base_eval_hooks import BaseEvalHook
 from ..metrics import *
@@ -90,7 +92,7 @@ class SegEvalHook(BaseEvalHook):
             )
 
             iou_per_class = calculate_iou_per_class(y_pred, y_true, num_classes=self.num_classes)
-            accuracy = np.sum(y_true==y_pred) / len(y_pred)
+            accuracy = np.sum(y_true==y_pred) /( y_pred.shape[0] * y_pred.shape[1] * y_pred.shape[2])
             self._precision_per_epoch.append(precision_per_class)
             self._recall_per_epoch.append(recall_per_class)
             self._f1_per_epoch.append(f1_per_class1)
@@ -117,7 +119,7 @@ class SegEvalHook(BaseEvalHook):
                 metric_list = list(metric_per_class[:,idx])
                 metric_list = list(map(lambda x: '{:6.4f}'.format(x).ljust(15,' ') ,metric_list))
                 metric_str = ''.join(metric_list)
-                logger.info(model.class_names[idx].ljust(max_len,' ') + metric_str)
+                logger.info(self.class_names[idx].ljust(max_len,' ') + metric_str)
 
             if self.is_val_best_epoch():
                 prefix = 'Best performance so far, '
@@ -134,7 +136,7 @@ class SegEvalHook(BaseEvalHook):
                 prefix = ''
 
             logger.info(prefix + 'mIoU = %.4f' % np.mean(iou_per_class))
-            mean_iou_per_epoch = [np.mean(f1) for f1 in iou_per_class]
+            mean_iou_per_epoch = [np.mean(iou) for iou in self._iou_per_epoch]
             metrices = dict(accuracy=self._accuracy_per_epoch, iou=mean_iou_per_epoch,
                             loss=self._avg_loss_per_epoch,
                             learning_rate=self._lr_per_epoch

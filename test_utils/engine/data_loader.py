@@ -69,6 +69,34 @@ def statistics_data(image_paths):
     return calc_mean_std(merge_paths)
 
 
+def build_gan_loader(dataset_cfg, loader_cfg,
+                     is_dist, **cfg
+                     ):
+    data_type = dataset_cfg.type
+    train_data_path = dataset_cfg.train_data_path
+    augmentations = dataset_cfg.augmentations
+
+    train_cfg_dict = dict(type=data_type, data_path=train_data_path, augmentations=augmentations)
+    train_dataset = build_dataset(train_cfg_dict)
+
+    if is_dist:
+        # 给每个rank对应的进程分配训练的样本索引
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+
+        # 将样本索引每batch_size个元素组成一个list
+        train_batch_sampler = torch.utils.data.BatchSampler(train_sampler, loader_cfg["batch_size"], drop_last=True)
+        train_data_loader = torch.utils.data.DataLoader(train_dataset,
+                                                   batch_sampler=train_batch_sampler,
+                                                   pin_memory=True,
+                                                   num_workers=loader_cfg["num_workers"],
+                                                   collate_fn=train_dataset.dataset_collate)
+    else:
+        train_data_loader = torch.utils.data.DataLoader(train_dataset, shuffle=True,
+                                                        collate_fn=train_dataset.dataset_collate, **loader_cfg)
+
+    return train_data_loader
+
+
 def build_data_loader(dataset_cfg, loader_cfg,
                       is_dist,
                       **cfg):

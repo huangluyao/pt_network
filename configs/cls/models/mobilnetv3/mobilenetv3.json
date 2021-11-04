@@ -1,5 +1,5 @@
 {
-    "pretrained": "model_zoo/pth/backbone/mobilnetv3/mobilnetv3_large.pth",
+    "pretrained": "model_zoo/pth/backbone/mobilenet/mobilenetv3_large.pth",
     "model": {
         "type": "ImageClassifier",
         "backbone": {

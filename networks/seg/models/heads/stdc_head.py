@@ -53,7 +53,7 @@ class STDCHead(BaseDecodeHead):
         self.fuse_kernel = torch.nn.Parameter(torch.tensor([[6. / 10], [3. / 10], [1. / 10]],
                                                            dtype=torch.float32).reshape(1, 3, 1, 1))
 
-    def forward(self, inputs):
+    def forward(self, inputs, return_last_feature=False):
 
         H, W = inputs[-1].shape[2:]
         global_context = self.conv_avg(F.avg_pool2d(inputs[-1], (H, W)))
@@ -79,11 +79,12 @@ class STDCHead(BaseDecodeHead):
         if self.training:
             seg_logit = [getattr(self, seg_head)(pred) for (seg_head, pred) in zip(self.seg_head_names, pred_out)]
             if len(seg_logit) == 1:
-                return seg_logit[0]
+                return seg_logit[0] if not return_last_feature else (seg_logit[0], last_feature)
             seg_logit.append(self.conv_out_sp8(inputs[0]))
-            return seg_logit
+            return seg_logit if not return_last_feature else (seg_logit, last_feature)
         else:
-            return getattr(self, self.seg_head_names[-1])(pred_out[-1])
+            out =  getattr(self, self.seg_head_names[-1])(pred_out[-1])
+            return out if not return_last_feature else (out, last_feature)
 
     def losses(self, seg_logits, seg_labels):
         H, W = seg_labels.shape[-2:]

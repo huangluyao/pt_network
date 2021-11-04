@@ -24,6 +24,15 @@ def build_optimizer(model, optimizer_cfg):
             return _optim(**_optimizer_cfg)
 
 
+def build_optimizers(model, cfgs):
+    optimizers = {}
+    for key, cfg in cfgs.items():
+        if hasattr(model, key):
+            module = getattr(model, key)
+            optimizers[key] = build_optimizer(module, cfg)
+    return optimizers
+
+
 class CosineDecayRestart:
     def __init__(self, cycle_epoch, cycle_radio=1.0, warm_up_steps=5):
         self.warm_up_steps = warm_up_steps

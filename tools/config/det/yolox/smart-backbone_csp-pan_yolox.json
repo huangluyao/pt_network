@@ -1,6 +1,7 @@
 {
-    "__base__": ["configs/det/models/yolox/smart-backbone_resnet18_csp-pan.json",
-                "tools/config/augmentation/base_augmentation.json", "tools/config/train_config/base.json"],
+    "__base__": ["configs/det/models/yolox/smart-backbone_csp-pan.json",
+                "tools/config/__base__/augmentation/base_augmentation.json",
+                "tools/config/__base__/det_base.json"],
     "task": "detection",
 
     "gpu_id": 0

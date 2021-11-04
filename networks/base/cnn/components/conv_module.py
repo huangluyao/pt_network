@@ -158,7 +158,7 @@ class ConvModule(nn.Module):
         if self.with_activation:
             act_cfg_ = act_cfg.copy()
             if act_cfg_['type'] not in [
-                    'Tanh', 'PReLU', 'Sigmoid', 'HSigmoid', 'Swish', "SiLU", "HardSwish"
+                    'Tanh', 'PReLU', 'Sigmoid', 'HSigmoid', 'Swish', "SiLU", "HardSwish", "HardSigmoid"
             ]:
                 act_cfg_.setdefault('inplace', inplace)
             self.activate = build_activation_layer(act_cfg_)

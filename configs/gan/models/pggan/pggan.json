@@ -1,0 +1,22 @@
+{
+  "_base_": "./pg_gan_base.json",
+  "model": {
+    "train_cfg": {"use_ema": true,
+     "nkimgs_per_scale": {"4": 1, "8": 2, "16": 3, "32": 4, "64": 5, "128": 6},
+     "transition_kimgs": 600,
+     "optimizer_cfg": {
+       "generator": {
+         "type": "Adam",
+         "lr": 0.001,
+         "betas": [0.0, 0.99]},
+       "discriminator": {
+         "type": "Adam",
+         "lr": 0.001,
+         "betas": [0.0, 0.99]}
+     },
+     "g_lr_base": 0.001,
+     "d_lr_base": 0.001,
+     "g_lr_schedule": {"128": 0.0015},
+     "d_lr_schedule": {"128": 0.0015}}
+  }
+}

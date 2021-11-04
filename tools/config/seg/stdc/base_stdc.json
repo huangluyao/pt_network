@@ -15,7 +15,7 @@
             224,
             224
         ],
-        "type": "LabelMeSegDataset",
+        "type": "SegDataset",
         "train_data_path": "/media/hly/Samsung_T51/datasets/huangluyao/segmentation/df_new/train",
         "val_data_path": "/media/hly/Samsung_T51/datasets/huangluyao/segmentation/df_new/val",
         "statistics_data": {

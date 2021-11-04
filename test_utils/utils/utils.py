@@ -7,6 +7,7 @@ from ..utils.checkpoint import load_checkpoint
 from networks.cls import build_classifier
 from networks.det import build_detector
 from networks.seg import build_segmentor
+from networks.gan import build_gan_model
 from test_utils.utils import init_distributed_mode, dist
 
 def build_model(cfg, num_classes, logger):
@@ -15,7 +16,7 @@ def build_model(cfg, num_classes, logger):
                            "detection":"bbox_head",
                            "segmentation":"decode_head"
                            }
-    num_classes_cfg = model_cfg.get(number_classes_model[cfg.get("task")], None)
+    num_classes_cfg = model_cfg.get(number_classes_model.get(cfg.get("task"), None), None)
     if num_classes_cfg:
         num_classes_cfg.update(dict(num_classes=num_classes))
     if cfg.get('task') == "classification":
@@ -25,6 +26,10 @@ def build_model(cfg, num_classes, logger):
         model = build_detector(model_cfg)
     elif cfg.get('task') == "segmentation":
         model = build_segmentor(model_cfg)
+    elif cfg.get("task") == "gan":
+        if "Inpaintor" not in model_cfg.type:
+            model_cfg.generator.out_size = model_cfg.discriminator.in_size = cfg.input_size[0]
+        model = build_gan_model(model_cfg)
     else:
         raise TypeError(f"task must be classification, detection or segmentation, but go {cfg['task']}")
 
@@ -65,3 +70,27 @@ def update_dateset_info(pipelines, means, stds, input_size):
             update_dateset_info(v, means, stds, input_size)
     else:
         pass
+
+
+def set_random_seed(seed, deterministic=False):
+    """Set random seed.
+
+    Args:
+        seed (int): Seed to be used.
+        deterministic (bool): Whether to set the deterministic option for
+            CUDNN backend, i.e., set `torch.backends.cudnn.deterministic`
+            to True and `torch.backends.cudnn.benchmark` to False.
+            Default: False.
+        rank_shift (bool): Whether to add rank number to the random seed to
+            have different random seed in different threads. Default: False.
+    """
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    if deterministic:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False

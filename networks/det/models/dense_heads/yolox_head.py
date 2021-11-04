@@ -42,7 +42,8 @@ class YOLOXHead(AnchorFreeHead):
             output_dir = kwargs["train_cfg"].get("output_dir", None)
             if output_dir is not None:
                 self.output_file = os.path.join(output_dir, "vis_point")
-                os.makedirs(self.output_file)
+                if os.path.exists(self.output_file):
+                    os.makedirs(self.output_file)
             else:
                 self.debug = False
         else:

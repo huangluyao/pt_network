@@ -41,9 +41,9 @@ class BaseEvalHook(Hook):
         param_group = runner.optimizer.param_groups[0]
 
         self.evaluate(param_group["lr"],
-                epoch_loss, self.dataloader,
+                epoch_loss,
+                self.dataloader,
                 runner.model,
-                runner,
                 logger=runner.logger,
                 )
 
