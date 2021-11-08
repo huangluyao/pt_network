@@ -461,7 +461,7 @@ class ResNet(nn.Module):
             if len(outs) == 1:
                 return outs[0]
             else:
-                return tuple(outs)
+                return outs
 
     def train(self, mode=True):
         """Convert the model into training mode while keep normalization layer

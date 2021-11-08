@@ -5,4 +5,5 @@ from .fcn_head import FCNHead
 from .unet_head import UNetHead
 from .dla_head import DLAHead
 from .stdc_head import STDCHead
+from .memory_head import MemoryHead
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

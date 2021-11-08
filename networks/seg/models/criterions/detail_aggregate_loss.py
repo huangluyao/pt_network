@@ -61,7 +61,7 @@ class DetailAggregateLoss(nn.Module):
 
         bce_loss = F.binary_cross_entropy_with_logits(boundary_logits, boudary_targets_pyramid)
         dice_loss = self.dice_loss_func(torch.sigmoid(boundary_logits), boudary_targets_pyramid)
-        return bce_loss,  dice_loss
+        return bce_loss + dice_loss
 
     def dice_loss_func(self, input, target):
         smooth = 1.

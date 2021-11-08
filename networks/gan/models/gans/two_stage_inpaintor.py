@@ -190,3 +190,26 @@ class TwoStageInpaintor(Base_GAN):
             loss_dict[prefix + 'loss_g_fake'] = loss_g_fake
 
         return loss_dict
+
+    def forward_test(self,
+                     data,
+                     **kwargs):
+
+        masked_img = data["masked_img"]
+        mask = data["mask"]
+
+        if self.input_with_ones:
+            tmp_ones = torch.ones_like(mask)
+            input_x = torch.cat([masked_img, tmp_ones, mask], dim=1)
+        else:
+            input_x = torch.cat([masked_img, mask], dim=1)
+
+
+        stage1_fake_res, stage2_fake_res = self.generator(input_x)
+        fake_img = stage2_fake_res * mask + masked_img * (1. - mask)
+
+        output = dict()
+        output['stage1_fake_res'] = stage1_fake_res
+        output['stage2_fake_res'] = stage2_fake_res
+        output['fake_img'] = fake_img
+        return output

@@ -1,14 +1,14 @@
 import torch
 import math
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 from copy import deepcopy
 from base.cnn import (build_activation_layer, build_conv_layer,
                       build_norm_layer, ConvModule, resize, _BatchNorm)
 from ..builder import HEADS, build_loss
 from ..criterions.detail_aggregate_loss import DetailAggregateLoss
-
-
+from .memory_head import ASPP, FeaturesMemory
 
 def fill_up_weights(up):
     w = up.weight.data
@@ -135,10 +135,12 @@ class DLAHead(nn.Module):
                  ignore_label=None,
                  align_corners=False,
                  use_deconv=True,
+                 dropout=0.,
                  **kwargs):
         super(DLAHead, self).__init__()
 
         assert down_ratio in [2, 4, 8, 16]
+        self.num_classes = num_classes
 
         self.loss = build_loss(loss)
         self.ignore_label = ignore_label
@@ -151,6 +153,7 @@ class DLAHead(nn.Module):
                             act_cfg=act_cfg
                             )
         self.fc = nn.Sequential(
+            nn.Dropout2d(dropout),
             nn.Conv2d(in_channels[0], num_classes, kernel_size=1,
                       stride=1, padding=0, bias=True))
         up_factor = 2
@@ -169,6 +172,7 @@ class DLAHead(nn.Module):
         self.init_weights()
 
     def forward(self, x):
+
         x = self.dla_up(x)
         x = self.fc(x)
         return self.up(x)
@@ -254,19 +258,69 @@ class DLAStrongHead(DLAHead):
                  norm_cfg=dict(type='BN', requires_grad=True),
                  act_cfg=dict(type='ReLU', inplace=True),
                  support_loss=dict(type="StructureLoss"),
+                 dropout=0.0,
+                 aspp_cfg=None,
+                 memory_update_cfg=None,
                  **kwargs):
         super(DLAStrongHead, self).__init__(num_classes=num_classes,
                                             in_channels=deepcopy(in_channels),
                                             norm_cfg=norm_cfg,
                                             act_cfg=act_cfg,
+                                            dropout=dropout,
                                             **kwargs)
+
+        if aspp_cfg is not None:
+
+            self.memory_update_cfg = memory_update_cfg
+            self.lr = 1e-3
+            self.context_within_image_module = ASPP(**aspp_cfg)
+
+            self.aspp_conv = ConvModule(in_channels[-1] *2,
+                                        in_channels[-1],
+                                        kernel_size=1,
+                                        stride=1,
+                                        norm_cfg=norm_cfg,
+                                        act_cfg=act_cfg
+                                        )
+
+            self.bottleneck = ConvModule(in_channels[-1],
+                                        in_channels[-1],
+                                        kernel_size=3,
+                                        stride=1,
+                                        padding=1,
+                                        norm_cfg=norm_cfg,
+                                        act_cfg=act_cfg
+                                        )
+            self.memory_module = FeaturesMemory(
+                num_classes=num_classes,
+                feats_channels=in_channels[-1],
+                transform_channels=in_channels[-1],
+                out_channels=in_channels[-1],
+                norm_cfg=norm_cfg,
+                act_cfg=act_cfg
+            )
+
+            self.decoder = nn.Sequential(
+                ConvModule(in_channels[-1],
+                           in_channels[-1],
+                           kernel_size=3,
+                           stride=1,
+                           padding=1,
+                           norm_cfg=norm_cfg,
+                           act_cfg=act_cfg
+                           ),
+                nn.Dropout2d(dropout),
+                nn.Conv2d(in_channels[-1], self.num_classes, kernel_size=1, stride=1, padding=0))
+
+
 
         self.fc = nn.ModuleList()
         for i in range(len(in_channels)-2, -1, -1):
             self.fc.append(
-                nn.Conv2d(in_channels[i], num_classes, kernel_size=1,
-                          stride=1, padding=0, bias=True)
-            )
+                nn.Sequential(
+                    nn.Dropout2d(dropout),
+                    nn.Conv2d(in_channels[i], num_classes, kernel_size=1,
+                              stride=1, padding=0, bias=True)))
 
         self.conv_out_sp8 = nn.Sequential(
             ConvModule(in_channels[-3], head_width, kernel_size=3, stride=1, padding=1,
@@ -296,9 +350,23 @@ class DLAStrongHead(DLAHead):
         dict[str, Tensor]
             a dictionary of loss components
         """
+        if hasattr(self, "context_within_image_module"):
+            features = getattr(self, "context_within_image_module")(inputs[-1])
+            neck_features = self.bottleneck(inputs[-1])
+            preds1 = self.decoder(neck_features)
+            stored_memory, memory_output = self.memory_module(neck_features, preds1, features)
+            inputs[-1] = memory_output
+
+            with torch.no_grad():
+                input_size = gt_semantic_seg.shape[1:]
+                self.memory_module.update(
+                    features=F.interpolate(neck_features, size=input_size, mode='bilinear', align_corners=self.align_corners),
+                    segmentation=gt_semantic_seg,
+                    learning_rate=self.lr,
+                    **self.memory_update_cfg
+                )
+
         outputs = self.dla_up(inputs, True)
-
-
         outputs = [f(out) for f, out in zip(self.fc, outputs)]
         outputs[-1] =  self.up(outputs[-1])
 
@@ -319,6 +387,13 @@ class DLAStrongHead(DLAHead):
         Tensor
             Output segmentation map.
         """
+        if hasattr(self, "context_within_image_module"):
+            features = getattr(self, "context_within_image_module")(inputs[-1])
+            neck_features = self.bottleneck(inputs[-1])
+            preds1 = self.decoder(neck_features)
+            stored_memory, memory_output = self.memory_module(neck_features, preds1, features)
+            inputs[-1] = memory_output
+
         x = self.dla_up(inputs)
         x = self.fc[-1](x)
         return self.up(x)
