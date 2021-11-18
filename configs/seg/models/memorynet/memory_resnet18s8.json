@@ -1,0 +1,40 @@
+{
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "type": "ResNet",
+            "depth": 18,
+            "out_levels": [2, 3, 4, 5],
+            "strides": [1, 2, 1, 1],
+            "dilations": [1, 1, 2, 4],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "MemoryHead",
+            "aspp_cfg": {
+                "dilations": [1, 12, 24, 36],
+                "in_channels": 512,
+                "out_channels": 512,
+                "align_corners": false,
+                "act_cfg": {"type": "ReLU"},
+                "norm_cfg":{"type":"BN", "requires_grad":true}
+            },
+            "in_channels": [64, 128, 256, 512],
+            "num_classes": 2,
+            "feats_channels": 512,
+            "stage1_loss": {"type": "LovaszLoss", "loss_weight": 0.4},
+            "stage2_loss": {"type": "LovaszLoss", "loss_weight": 1.0, "class_weight": [0.1, 1.0, 1.0]},
+            "aux_loss": {"type": "LovaszLoss", "loss_weight": 0.4},
+
+            "memory_update_cfg": {
+                "strategy": "cosine_similarity",
+                "ignore_index": 255,
+                "momentum_cfg": {
+                "base_momentum": 0.9,
+                "base_lr": 0.009,
+                "adjust_by_learning_rate": true}
+            }
+        }
+    }
+}

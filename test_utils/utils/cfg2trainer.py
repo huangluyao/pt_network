@@ -6,6 +6,7 @@ from ..engine.data_loader import build_data_loader, build_gan_loader
 from ..evaluator import model_info
 from ..engine.optimizer import build_optimizer, build_scheduler, build_optimizers
 from ..engine import SimplerTrainer, DynamicIterTrainer
+from .file_io import save_json
 
 def cfg2trainer(cfg, logger):
 
@@ -51,6 +52,9 @@ def cfg2trainer(cfg, logger):
         logger.info('distributed init (rank {}): {}'.format(cfg.rank, cfg.dist_url))
     else:
         pass
+
+    save_path = os.path.join(cfg.output_dir, "config.json")
+    save_json(cfg, save_path)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = build_model(cfg, len(cfg.class_names), logger).to(device)
@@ -108,7 +112,13 @@ def cfg2trainer(cfg, logger):
             hook_cfg["model_name"] = type(model).__name__
             hook_cfg["dataloader"] = val_dataloader
             hook_cfg["input_size"] = input_size
-        priority = hook_cfg.get("priority", "NORMAL")
+        if "SSLWithGANHook" == hook_cfg["type"]:
+            hook_cfg["train_gt_loader"] = train_dataloader
+            if hook_cfg["loader_cfg"] == "auto":
+                hook_cfg["loader_cfg"] = cfg.loader_cfg
+            hook_cfg["augmentations"] = cfg.dataset.augmentations["train"]
+
+        priority = hook_cfg.pop("priority", "NORMAL")
         trainer.register_hook(hook_cfg, priority)
 
     return trainer

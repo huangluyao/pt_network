@@ -87,7 +87,7 @@
       "out_act_cfg": {"type": "LeakyReLU", "negative_slope": 0.2},
       "with_spectral_norm": true
     },
-    "loss_gan": {"type": "HingeLoss", "loss_weight": 0.1},
+    "loss_gan": {"type": "WGANLossNS", "loss_weight": 0.1},
     "loss_l1_hole": {"type": "L1Loss", "loss_weight": 1.0},
     "loss_l1_valid": {"type": "L1Loss", "loss_weight": 1.0}
   }

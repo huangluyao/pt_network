@@ -160,6 +160,11 @@ class EasyDict(dict):
             setattr(self, k, d[k])
 
     def pop(self, k, d=None):
-        delattr(self, k)
+        if hasattr(self, k):
+            delattr(self, k)
         return super(EasyDict, self).pop(k, d)
 
+
+def save_json(cfg, save_path):
+    with open(save_path, 'w') as f:
+        json.dump(cfg, f, indent=4)

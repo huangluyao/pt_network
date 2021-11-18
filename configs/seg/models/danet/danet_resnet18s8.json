@@ -1,0 +1,26 @@
+{
+    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "type": "ResNet",
+            "depth": 18,
+            "out_levels": [2, 3, 4, 5],
+            "strides": [1, 2, 1, 1],
+            "dilations": [1, 1, 2, 4],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "DAHead",
+            "pam_channels": 64,
+            "in_channels": 512,
+            "in_index": 3,
+            "head_width": 512,
+            "dropout_ratio": 0.1,
+            "num_classes": 21,
+            "norm_cfg": {"type": "BN", "requires_grad": true},
+            "align_corners": false,
+            "loss_decode": {"type": "CrossEntropyLoss", "use_sigmoid": false, "loss_weight": 1.0}
+        }
+    }
+}

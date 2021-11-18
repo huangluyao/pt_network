@@ -13,6 +13,7 @@ from .shufflenet_v2_plus import ShuffleNetV2Plus
 from .dsnet import SmartBackbone
 from .utils import *
 from .mobilenetv3 import MobileNetV3
+from .mobilenetv2 import MobileNetV2
 from .swin_transformer import SwinTransformer
 from .efficientnet import EfficientNetv2_tiny
 from .pruned_smart_backbone import PrunedSmartBackbone

@@ -194,8 +194,8 @@ class Bottleneck(nn.Module):
             self.conv1_stride = stride[0]
             self.conv2_stride = stride[1]
         else:
-            self.conv1_stride = stride
-            self.conv2_stride = 1
+            self.conv1_stride = 1
+            self.conv2_stride = stride
 
         self.norm1_name, norm1 = build_norm_layer(
             norm_cfg, mid_channels, postfix=1)

@@ -16,7 +16,9 @@
             "align_corners": true,
             "norm_cfg": {"type": "BN", "momentum": 0.1, "track_running_stats": true},
             "act_cfg": {"type": "LeakyReLU", "inplace": true, "negative_slope": 0.01},
-            "loss": {"type": "CrossEntropyLoss"}
+            "loss": {"type": "CrossEntropyLoss"},
+            "ignore_label": 0
+
         }
     }
 }

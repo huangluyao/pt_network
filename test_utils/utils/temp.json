@@ -1,25 +1,21 @@
 {
     "gpu_id": 0,
-    "optimizers":
-    {
-        "generator": {"type": "Adam", "lr": 0.0016, "betas": [0, 0.99]},
-        "discriminator": {"type": "Adam","lr": 0.00188,"betas": [0, 0.99]}
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.0001
     },
-    
     "dataset": {
-        "input_size": [128, 128],
-        "type": "GANDataset",
+        "input_size": [256, 256],
+        "type": "SegDataset",
         "use_mosaic": false,
-        "train_data_path": "C:\\workspace\\data\\classification\\df\\train\\ng",
+        "train_data_path": "/workspace/data/seg/df_new/train/",
+        "val_data_path": "/workspace/data/seg/df_new/val/",
         "statistics_data": {
-            "means": [127.5,127.5,127.5],
-            "stds": [127.5,127.5,127.5]
-        },
-        "augmentations":[
-          {"type": "Resize", "height": 640, "width": 640, "always_apply": true, "padding": false},
-          {"type": "RandomFlip", "prob": 0.5, "direction": "horizontal"},
-          {"type": "Normalize", "mean": [127.5,127.5,127.5], "std": [127.5,127.5,127.5], "scale": 1,"always_apply": true}
-       ]
+            "means": [108.825, 116.744, 115.917],
+            "stds": [56.843, 55.318, 56.83]
+        }
+
     },
     "loader_cfg": {
         "batch_size": 4,
@@ -27,6 +23,32 @@
     },
 
     "use_ema":false,
-    "max_epochs": 5,
-    "max_iters": null
+    "max_epochs": 200,
+    "max_iters": null,
+
+    "hook_cfgs": [
+        {
+            "type": "CosineRestartLrUpdaterHook",
+            "min_lr": 1e-5,
+            "by_epoch": true,
+            "warmup": "linear",
+            "warmup_iters": 50,
+            "warmup_ratio": 0.1,
+            "periods": [25, 75, 125, 200],
+            "restart_weights": [1, 0.75, 0.5, 0.5]
+        },
+        {
+            "type": "OptimizerHook",
+            "grad_clip": null
+        },
+        {
+            "type": "SegEvalHook",
+            "start": null,
+            "evaluation_first": false,
+            "interval": 1
+        },
+        {
+            "type": "IterTimerHook"
+        }
+    ]
 }

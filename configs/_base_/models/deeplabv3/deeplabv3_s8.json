@@ -4,7 +4,6 @@
         "backbone": {
             "strides": [1, 2, 1, 1],
             "dilations": [1, 1, 2, 4],
-            "contract_dilation": true,
             "out_levels": [2, 3, 4, 5],
             "num_classes": null
         },

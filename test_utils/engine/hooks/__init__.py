@@ -8,3 +8,4 @@ from .pruned_hook import PrunedHook
 from .ema_hook import ExponentialMovingAverageHook
 from .visualize_training_samples import VisualizeUnconditionalSamples
 from .image_inpatining_visualization import ImageInpaintingVisualizationHook
+from .ssl_with_gan import SSLWithGANHook

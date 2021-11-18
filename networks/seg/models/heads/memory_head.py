@@ -33,7 +33,7 @@ class FeaturesMemory(nn.Module):
                 self_attention = SelfAttentionBlock(
                     key_in_channels=feats_channels,
                     query_in_channels=feats_channels,
-                    transform_channels=transform_channels,
+                    channels=transform_channels,
                     out_channels=feats_channels,
                     share_key_query=False,
                     query_downsample=None,
@@ -43,7 +43,7 @@ class FeaturesMemory(nn.Module):
                     key_query_norm=True,
                     value_out_norm=True,
                     matmul_norm=True,
-                    with_out_project=True,
+                    with_out=True,
                     norm_cfg=norm_cfg,
                     act_cfg=act_cfg,
                 )
@@ -58,7 +58,7 @@ class FeaturesMemory(nn.Module):
             self.self_attention = SelfAttentionBlock(
                 key_in_channels=feats_channels,
                 query_in_channels=feats_channels,
-                transform_channels=transform_channels,
+                channels=transform_channels,
                 out_channels=feats_channels,
                 share_key_query=False,
                 query_downsample=None,
@@ -68,7 +68,7 @@ class FeaturesMemory(nn.Module):
                 key_query_norm=True,
                 value_out_norm=True,
                 matmul_norm=True,
-                with_out_project=True,
+                with_out=True,
                 norm_cfg=norm_cfg,
                 act_cfg=act_cfg,
             )
@@ -83,7 +83,7 @@ class FeaturesMemory(nn.Module):
             self.self_attention_ms = SelfAttentionBlock(
                 key_in_channels=feats_channels,
                 query_in_channels=feats_channels,
-                transform_channels=transform_channels,
+                channels=transform_channels,
                 out_channels=feats_channels,
                 share_key_query=False,
                 query_downsample=None,
@@ -93,10 +93,11 @@ class FeaturesMemory(nn.Module):
                 key_query_norm=True,
                 value_out_norm=True,
                 matmul_norm=True,
-                with_out_project=True,
+                with_out=True,
                 norm_cfg=norm_cfg,
                 act_cfg=act_cfg,
             )
+
             self.bottleneck_ms = nn.Sequential(
                 ConvModule(feats_channels * 2, out_channels, kernel_size=3, stride=1, padding=1, bias=False,
                            norm_cfg=norm_cfg,

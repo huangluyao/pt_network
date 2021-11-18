@@ -22,7 +22,7 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default="tools/config/gan/style_gan2.json",
+                        default="tools/config/seg/dla/test_dla.json",
                         type=str)
     parser.add_argument('-p', '--pretrained', type=str,
                         default='',
@@ -48,6 +48,8 @@ def setup():
                 if len(config[key]) >0 and isinstance(config[key][0], dict):
                     for info_dict in config[key]:
                         logger.info(f'{prefix} {key.ljust(20) + str(info_dict)}')
+                else:
+                    logger.info(f'{prefix} {key.ljust(20) + str(config[key])}')
             else:
                 logger.info(f'{prefix} {key.ljust(20) + str(config[key])}')
 

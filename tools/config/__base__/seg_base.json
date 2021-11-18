@@ -9,8 +9,8 @@
         "input_size": [256, 256],
         "type": "SegDataset",
         "use_mosaic": false,
-        "train_data_path": "E:/datasets/huangluyao/segmentation/white_blood_cell/train",
-        "val_data_path": "E:/datasets/huangluyao/segmentation/white_blood_cell/val",
+        "train_data_path": "/workspace/data/seg/df_new/train/",
+        "val_data_path": "/workspace/data/seg/df_new/val/",
         "statistics_data": {
             "means": [108.825, 116.744, 115.917],
             "stds": [56.843, 55.318, 56.83]
@@ -23,7 +23,7 @@
     },
 
     "use_ema":false,
-    "max_epochs": 50,
+    "max_epochs": 200,
     "max_iters": null,
 
     "hook_cfgs": [
@@ -34,8 +34,8 @@
             "warmup": "linear",
             "warmup_iters": 50,
             "warmup_ratio": 0.1,
-            "periods": [25, 50],
-            "restart_weights": [1, 0.5]
+            "periods": [25, 75, 125, 200],
+            "restart_weights": [1, 0.75, 0.5, 0.5]
         },
         {
             "type": "OptimizerHook",

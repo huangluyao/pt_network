@@ -2,7 +2,7 @@ import numbers
 
 import cv2
 import random
-
+import torch
 from .. import TRANSFORM
 from .transforms_interface import BasicTransform
 from .functional import *
@@ -264,3 +264,23 @@ class GaussNoise(BasicTransform):
     @property
     def targets(self):
         return {"image": self.apply} # image only transform
+
+@TRANSFORM.registry()
+class ToTensor(BasicTransform):
+    def __init__(self, transpose_mask=False, **kwargs):
+        super(ToTensor, self).__init__( **kwargs)
+        self.transpose_mask = transpose_mask
+
+    def apply(self, img, **params):  # skipcq: PYL-W0613
+        if len(img.shape) not in [2, 3]:
+            raise ValueError("ToTensor only supports images in HW or HWC format")
+
+        if len(img.shape) == 2:
+            img = np.expand_dims(img, 2)
+
+        return torch.from_numpy(img.transpose(2, 0, 1))
+
+    def apply_to_mask(self, mask, **params):
+        if self.transpose_mask and mask.ndim == 3:
+            mask = mask.transpose(2, 0, 1)
+        return torch.from_numpy(mask)

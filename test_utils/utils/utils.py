@@ -12,13 +12,15 @@ from test_utils.utils import init_distributed_mode, dist
 
 def build_model(cfg, num_classes, logger):
     model_cfg = cfg.get('model')
-    number_classes_model ={"classification":"backbone",
-                           "detection":"bbox_head",
-                           "segmentation":"decode_head"
+    number_classes_model ={"classification":["backbone"],
+                           "detection":["bbox_head"],
+                           "segmentation":["decode_head", "auxiliary_head"]
                            }
-    num_classes_cfg = model_cfg.get(number_classes_model.get(cfg.get("task"), None), None)
-    if num_classes_cfg:
-        num_classes_cfg.update(dict(num_classes=num_classes))
+    num_classes_cfgs = [model_cfg.get(head_cfg, None) for head_cfg in number_classes_model.get(cfg.get("task"), None)]
+    if num_classes_cfgs:
+        for c in num_classes_cfgs:
+            if c is not None:
+                c.update(dict(num_classes=num_classes))
     if cfg.get('task') == "classification":
         model = build_classifier(model_cfg)
     elif cfg.get('task') == "detection":

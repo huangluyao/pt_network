@@ -6,4 +6,5 @@ from .unet_head import UNetHead
 from .dla_head import DLAHead
 from .stdc_head import STDCHead
 from .memory_head import MemoryHead
+from .dahead import DAHead
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

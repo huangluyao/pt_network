@@ -23,55 +23,6 @@ def _load_checkpoint(filename, map_location=None):
     return checkpoint
 
 
-
-def load_checkpoint(model,
-                    filename,
-                    map_location=None,
-                    strict=False,
-                    logger=None):
-    """Load checkpoint from a file or URI.
-
-    Parameters
-    ----------
-    model : Module
-        Module to load checkpoint.
-    filename : str
-        Accept local filepath, URL, ``torchvision://xxx``.
-    map_location : str
-        Same as :func:`torch.load`.
-    strict : bool
-        Whether to allow different params for the model and checkpoint.
-    logger : :mod:`logging.Logger`, optional
-        The logger for error message.
-
-    Returns
-    -------
-    checkpoint : dict or OrderedDict
-        The loaded checkpoint.
-    """
-    checkpoint = _load_checkpoint(filename, map_location)
-    if not isinstance(checkpoint, dict):
-        if type(checkpoint) == type(model):
-            model_state_dict = model.state_dict()
-            load_state_dict = checkpoint.state_dict()
-            for key, weight in load_state_dict.items():
-                if model_state_dict[key].shape == weight.shape:
-                    model_state_dict[key] = weight
-            model.load_state_dict(model_state_dict)
-            return checkpoint
-        else:
-            raise RuntimeError(
-                f'No state_dict found in checkpoint file {filename}')
-    if 'state_dict' in checkpoint:
-        state_dict = checkpoint['state_dict']
-    else:
-        state_dict = checkpoint
-    if list(state_dict.keys())[0].startswith('module.'):
-        state_dict = {k[7:]: v for k, v in checkpoint['state_dict'].items()}
-    load_state_dict(model, state_dict, strict, logger)
-    return checkpoint
-
-
 def load_state_dict(module, state_dict, strict=False, logger=None):
     """Load state_dict to a module.
 
@@ -129,3 +80,52 @@ def load_state_dict(module, state_dict, strict=False, logger=None):
     if missing_keys:
         err_msg.append(
             f'missing keys in source state_dict: {", ".join(missing_keys)}\n')
+
+
+def load_checkpoint(model,
+                    filename,
+                    map_location=None,
+                    strict=False,
+                    logger=None):
+    """Load checkpoint from a file or URI.
+
+    Parameters
+    ----------
+    model : Module
+        Module to load checkpoint.
+    filename : str
+        Accept local filepath, URL, ``torchvision://xxx``.
+    map_location : str
+        Same as :func:`torch.load`.
+    strict : bool
+        Whether to allow different params for the model and checkpoint.
+    logger : :mod:`logging.Logger`, optional
+        The logger for error message.
+
+    Returns
+    -------
+    checkpoint : dict or OrderedDict
+        The loaded checkpoint.
+    """
+    checkpoint = _load_checkpoint(filename, map_location)
+    if not isinstance(checkpoint, dict):
+        if type(checkpoint) == type(model):
+            model_state_dict = model.state_dict()
+            new_state_dict = checkpoint.state_dict()
+            for key, weight in new_state_dict.items():
+                if model_state_dict[key].shape == weight.shape:
+                    model_state_dict[key] = weight
+            model.load_state_dict(model_state_dict)
+            return checkpoint
+        else:
+            raise RuntimeError(
+                f'No state_dict found in checkpoint file {filename}')
+    if 'state_dict' in checkpoint:
+        state_dict = checkpoint['state_dict']
+    else:
+        state_dict = checkpoint
+    if list(state_dict.keys())[0].startswith('module.'):
+        state_dict = {k[7:]: v for k, v in checkpoint['state_dict'].items()}
+    load_state_dict(model, state_dict, strict, logger)
+    return checkpoint
+

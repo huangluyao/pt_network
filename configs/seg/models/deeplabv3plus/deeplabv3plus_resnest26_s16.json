@@ -1,0 +1,32 @@
+{
+    "_base_": "../../../_base_/models/deeplabv3/deeplabv3plus_s16.json",
+    "pretrained": "nas://model_zoo/pth/gluoncv/ResNeSt26.pth",
+    "model": {
+        "backbone": {
+            "type": "ResNeSt",
+            "layers": [
+                2,
+                2,
+                2,
+                2
+            ],
+            "radix": 2,
+            "groups": 1,
+            "bottleneck_width": 64,
+            "deep_stem": true,
+            "stem_width": 32,
+            "avg_down": true,
+            "avd": true,
+            "avd_first": false,
+            "multi_grid": [2, 4],
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": 2048,
+            "c1_in_channels": 256
+        },
+        "auxiliary_head": {
+            "in_channels": 1024
+        }
+    }
+}

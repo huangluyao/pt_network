@@ -38,24 +38,24 @@ class ImageInpaintingDataset(BaseDataset):
 
                     label_points = []
                     label_names = []
+                    if labels_info:
+                        for label_info in labels_info:
+                            label_name = label_info.get('label', None)
+                            if not label_name:
+                                continue
+                            points = np.array(label_info['points'])
+                            if label_name not in self.class_names:
+                                self.class_names.append(label_name)
 
-                    for label_info in labels_info:
-                        label_name = label_info.get('label', None)
-                        if not label_name:
-                            continue
-                        points = np.array(label_info['points'])
-                        if label_name not in self.class_names:
-                            self.class_names.append(label_name)
+                            label_points.append(points)
+                            label_names.append(self.class_names.index(label_name)+1)
 
-                        label_points.append(points)
-                        label_names.append(self.class_names.index(label_name)+1)
-
-                    image_info = dict(
-                        image_path=annotation_file_path.replace('annotations', 'images').replace('json', 'png'),
-                        label_points=label_points,
-                        label_index=np.array(label_names)
-                        )
-                    image_infos.append(image_info)
+                        image_info = dict(
+                            image_path=annotation_file_path.replace('annotations', 'images').replace('json', 'png'),
+                            label_points=label_points,
+                            label_index=np.array(label_names)
+                            )
+                        image_infos.append(image_info)
 
         return image_infos
 
