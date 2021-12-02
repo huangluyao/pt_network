@@ -16,10 +16,9 @@
             "down_ratio": 2,
             "num_classes": 2,
             "align_corners": true,
-            "norm_cfg": {"type": "BN", "momentum": 0.1, "track_running_stats": true},
-            "act_cfg": {"type": "LeakyReLU", "inplace": true, "negative_slope": 0.01},
-            "loss": {"type": "CrossEntropyLoss"},
-            "support_loss": {"type": "LovaszLoss"}
+            "norm_cfg": {"type": "BN"},
+            "act_cfg": {"type": "LeakyReLU"},
+            "loss": [{"type": "AsymmetricLoss"}]
         }
     }
 }

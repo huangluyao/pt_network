@@ -18,7 +18,7 @@ class IterTimerHook(Hook):
         if runner.device != torch.device("cpu"):
             torch.cuda.synchronize(runner.device)
 
-        outputs = {key:reduce_value(loss, average=True) for key, loss in runner.outputs.items()}
+        outputs = {key:reduce_value(loss, average=True) for key, loss in runner.outputs.items() if "loss" in key}
 
         cur_lr = runner.optimizer.param_groups[0]["lr"]
         if runner.inner_iter % 10 == 0:

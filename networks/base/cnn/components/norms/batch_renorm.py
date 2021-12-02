@@ -84,9 +84,9 @@ class BatchRenormalization(_BatchNorm):
             device = self.weight.device
             mean = torch.mean(input, dim=(0,2,3), keepdim=False).to(device)
             std = torch.clamp(torch.std(input, dim=(0,2,3), keepdim=False), self.eps, 1e10).to(device)
-            r = (std / torch.sqrt(self.running_var + self.eps)).to(device)
+            r = (std.detach() / torch.sqrt(self.running_var + self.eps)).to(device)
             r = torch.clamp(r, min=1/self.r_max, max=self.r_max).to(device)
-            d = ((mean - self.running_mean) / torch.sqrt(self.running_var + self.eps)).to(device)
+            d = ((mean.detach() - self.running_mean) / torch.sqrt(self.running_var + self.eps)).to(device)
             d = torch.clamp(d, min=-self.d_max, max=self.d_max).to(device)
 
 

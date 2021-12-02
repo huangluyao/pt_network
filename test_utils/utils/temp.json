@@ -9,8 +9,8 @@
         "input_size": [256, 256],
         "type": "SegDataset",
         "use_mosaic": false,
-        "train_data_path": "/workspace/data/seg/df_new/train/",
-        "val_data_path": "/workspace/data/seg/df_new/val/",
+        "train_data_path": "/workspace/data/seg/dos_stc/train",
+        "val_data_path": "/workspace/data/seg/dos_stc/val",
         "statistics_data": {
             "means": [108.825, 116.744, 115.917],
             "stds": [56.843, 55.318, 56.83]

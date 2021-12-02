@@ -6,16 +6,11 @@
         "weight_decay": 0.0001
     },
     "dataset": {
-        "input_size": [256, 256],
+        "input_size": [224, 224],
         "type": "SegDataset",
         "use_mosaic": false,
-        "train_data_path": "/workspace/data/seg/df_new/train/",
-        "val_data_path": "/workspace/data/seg/df_new/val/",
-        "statistics_data": {
-            "means": [108.825, 116.744, 115.917],
-            "stds": [56.843, 55.318, 56.83]
-        }
-
+        "train_data_path": "/workspace/data/seg/fm/train",
+        "val_data_path": "/workspace/data/seg/fm/val"
     },
     "loader_cfg": {
         "batch_size": 4,

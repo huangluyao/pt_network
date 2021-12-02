@@ -1,0 +1,18 @@
+{
+    "__base__": [
+        "configs/seg/models/dla/dla_mobilenetv3.json",
+        "tools/config/__base__/augmentation/base_augmentation.json",
+        "tools/config/__base__/seg_base.json"
+    ],
+    "task": "segmentation",
+    "loader_cfg": {
+        "batch_size": 8,
+        "num_workers": 0
+    },
+    "model": {
+    "decode_head": {
+        "act_cfg": {"type": "PReLU"},
+        "loss": [{"type": "LovaszLoss"}, {"type": "CrossEntropyLoss"}, {"type": "BoundaryLoss"}]
+        }
+    }
+}

@@ -106,7 +106,7 @@ class ConvModule(nn.Module):
         self.inplace = inplace
         self.with_spectral_norm = with_spectral_norm
         self.with_explicit_padding = padding_mode not in official_padding_mode
-        self.order = order
+        self.order =tuple(order) if isinstance(order, list) else order
         assert isinstance(self.order, tuple) and len(self.order) == 3
         assert set(order) == set(['conv', 'norm', 'act'])
 
@@ -157,10 +157,12 @@ class ConvModule(nn.Module):
 
         if self.with_activation:
             act_cfg_ = act_cfg.copy()
-            if act_cfg_['type'] not in [
-                    'Tanh', 'PReLU', 'Sigmoid', 'HSigmoid', 'Swish', "SiLU", "HardSwish", "HardSigmoid"
-            ]:
+            if act_cfg_['type'] in ['ReLU', 'LeakyReLU', 'RReLU', 'ReLU6', 'ELU']:
                 act_cfg_.setdefault('inplace', inplace)
+
+            elif act_cfg_['type'] in ['MetaAconC', 'AconC', 'FReLU', 'xUnitD', 'xUnitS', 'KAF']:
+                act_cfg_.setdefault('c1', self.out_channels)
+
             self.activate = build_activation_layer(act_cfg_)
 
         self.init_weights()

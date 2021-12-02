@@ -1,7 +1,22 @@
 import functools
-
+import torch
 import torch.nn.functional as F
 
+
+def expand_onehot_labels(labels, target_shape, ignore_index=-100):
+    labels = labels.long()
+    """Expand onehot labels to match the size of prediction."""
+    bin_labels = labels.new_zeros(target_shape)
+    valid_mask = (labels >= 0) & (labels != ignore_index)
+    inds = torch.nonzero(valid_mask, as_tuple=True)
+
+    if inds[0].numel() > 0:
+        if labels.dim() == 3:
+            bin_labels[inds[0], labels[valid_mask], inds[1], inds[2]] = 1
+        else:
+            bin_labels[inds[0], labels[valid_mask]] = 1
+
+    return bin_labels, valid_mask
 
 def reduce_loss(loss, reduction):
     """Reduce loss as specified.
@@ -24,7 +39,6 @@ def reduce_loss(loss, reduction):
         return loss.mean()
     elif reduction_enum == 2:
         return loss.sum()
-
 
 def weight_reduce_loss(loss, weight=None, reduction='mean', avg_factor=None):
     """Apply element-wise weight and reduce loss.
@@ -59,7 +73,6 @@ def weight_reduce_loss(loss, weight=None, reduction='mean', avg_factor=None):
         elif reduction != 'none':
             raise ValueError('avg_factor can not be used with reduction="sum"')
     return loss
-
 
 def weighted_loss(loss_func):
     """Create a weighted version of a given loss function.
@@ -104,3 +117,4 @@ def weighted_loss(loss_func):
         return loss
 
     return wrapper
+

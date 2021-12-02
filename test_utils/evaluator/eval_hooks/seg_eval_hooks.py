@@ -1,7 +1,7 @@
 import os
 import cv2
 import math
-
+import time
 import numpy as np
 import torch
 from .base_eval_hooks import BaseEvalHook
@@ -47,11 +47,19 @@ class SegEvalHook(BaseEvalHook):
 
         model.eval()
         img_paths = []
+        infer_times = []
         for step, (img_batch, label_batch) in enumerate(dataloader):
             img_paths += [img_path for img_path in label_batch['image_path']]
             if not isinstance(img_batch, torch.Tensor):
                 img_batch = torch.from_numpy(img_batch).to(model.device, dtype=torch.float32)
-            pred = model(img_batch)
+
+            with torch.no_grad():
+                torch.cuda.synchronize()
+                time_start = time.time()
+                pred = model(img_batch)["preds"]
+                torch.cuda.synchronize()
+                time_end = time.time()
+            infer_times.append(time_end - time_start)
             if step == 0:
                 pred_array = pred.detach().cpu().numpy()
                 pred_array = np.transpose(pred_array, [0, 2, 3, 1])
@@ -74,6 +82,7 @@ class SegEvalHook(BaseEvalHook):
         else:
             y_prob = np.squeeze(y_prob, axis=-1)
 
+        logger.info("infer time for each image %.4fs" % (sum(infer_times) / len(infer_times)))
         if self.num_classes==1:
             auc, aupr, ks, bestf1 = calculate_auc_aupr_ks_bestf1(y_prob, y_true)
             self._auc_per_epoch.append(auc)

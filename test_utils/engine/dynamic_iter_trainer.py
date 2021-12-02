@@ -112,6 +112,7 @@ class DynamicIterTrainer(TrainerBase):
             torch.cuda.synchronize(self.device)
 
         self.after_train()
+        self.logger.info("finish train.")
 
     def run_iter(self, img_batch, **kwargs):
         outputs = self.model.train_step(img_batch, self.optimizer, **kwargs)

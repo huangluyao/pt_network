@@ -1,0 +1,23 @@
+{
+    "pretrained": "model_zoo/pth/backbone/mobilenet/mobilenetv3_large.pth",
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "type": "MobileNetV3",
+            "mode": "large",
+            "out_levels": [1, 2, 3, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "DLAStrongHead",
+            "in_channels": [16, 24, 40, 112, 160],
+            "down_ratio": 2,
+            "num_classes": 2,
+            "align_corners": true,
+            "norm_cfg": {"type": "BN"},
+            "act_cfg": {"type": "LeakyReLU"},
+            "loss": {"type": "CrossEntropyLoss"},
+            "support_loss": {"type": "LovaszLoss"}
+        }
+    }
+}

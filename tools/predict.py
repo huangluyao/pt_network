@@ -10,39 +10,6 @@ from test_utils.evaluator.visualizer import resize_box, resize_mask, show_detect
 from tools.train import parse_config_file, fromfile
 from test_utils.utils.file_io import mkdir
 
-temp = True
-if temp:
-    import csv
-
-    f = open('test.csv', 'w', newline='')
-    csv_writer = csv.writer(f)
-    csv_writer.writerow(['name', 'image_id', 'confidence', 'xmin',
-                         'ymin', 'xmax', 'ymax'
-                         ])
-
-
-    def save_csv(image_path, boxes, ori_image, input_size, classes_name):
-
-        image_id = os.path.basename(image_path).split('.')[0]
-        # image_id = int(image_id)
-        ori_size = ori_image.shape[:2]
-        boxes = boxes[0]
-        boxes = resize_box(ori_size, (input_size[1], input_size[0]), boxes)
-
-        detections = boxes[~np.all(boxes == 0, axis=1)]
-        indices = np.where(detections[:, -1] >= 0.3)[0]
-        detections = detections[indices, :]
-        class_ids = np.unique(detections[:, -2])
-        class_ids = class_ids[class_ids > 0].astype(np.int32)
-        if len(class_ids) == 0:
-            return
-        for detection in detections:
-            confidence = detection[-1]
-            name = classes_name[int(detection[4])-1]
-            info = [name, image_id, confidence, int(detection[0]), int(detection[1]), int(detection[2]), int(detection[3])]
-            csv_writer.writerow(info)
-
-
 class Predict:
     def __init__(self, cfg):
         self._task = cfg['task']
@@ -69,8 +36,6 @@ class Predict:
 
         predict = predict.detach().cpu().numpy()
         result = self.get_result_img(src, predict)
-        if temp:
-            save_csv(image_path, predict, src, self.input_size, self.classes_name)
         # get results visualization
         return result
 
@@ -170,7 +135,6 @@ if __name__=="__main__":
         for image_name in image_names:
             image_path = os.path.join(file, image_name)
             img = cv2.imread(image_path)
-            img = deHaze(img /255.0)*255
             result = pred(img, image_path)
             print(f"predict image from {image_path}")
             cv2.imwrite(os.path.join(result_dir, image_name), result)

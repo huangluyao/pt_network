@@ -18,3 +18,6 @@ if __name__=="__main__":
     dis = StyleGAN2Discriminator(512,channel_multiplier=1).to(device)
 
     print(dis(out).shape)
+
+
+

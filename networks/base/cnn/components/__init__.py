@@ -9,6 +9,8 @@ from .registry import (ACTIVATION_LAYERS, CONV_LAYERS,
 from .upsample import build_upsample_layer
 from .wrappers import (NewEmptyTensorOp, Conv2d, ConvTranspose2d,
                        MaxPool2d, Linear, resize, Scale, Upsample)
+from .activations import *
+
 
 __all__ = [k for k in globals().keys() if not k.startswith("_")]
 __all__ += ['_BatchNorm']

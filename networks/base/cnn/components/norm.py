@@ -73,7 +73,7 @@ def abbreviation(class_type):
         elif 'instance' in class_name:
             return 'in'
         else:
-            return 'norm'
+            return class_name
 
 
 def build_norm_layer(cfg, num_features, postfix='', anonymous=False):

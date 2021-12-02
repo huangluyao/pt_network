@@ -1,0 +1,20 @@
+{
+    "__base__": [
+        "configs/seg/models/dla/dlastrong_resnet18s8.json",
+        "tools/config/__base__/augmentation/base_augmentation.json",
+        "tools/config/__base__/seg_base.json"
+    ],
+    "task": "segmentation",
+    "loader_cfg": {
+        "batch_size": 8,
+        "num_workers": 0
+    },
+    "model": {
+    "decode_head": {
+        "upsample_cfg": {"type": "deconv"},
+        "norm_cfg":{"type": "BRN", "rmax_inc_step": 1000, "dmax_inc_step": 500},
+        "act_cfg": {"type": "xUnitS"},
+        "loss": [{"type": "LovaszLoss"}, {"type": "CrossEntropyLoss"}, {"type": "BoundaryLoss"}]
+        }
+    }
+}

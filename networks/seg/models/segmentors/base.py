@@ -93,16 +93,19 @@ class BaseSegmentor(nn.Module):
         """
         parsed_metrics = OrderedDict()
         for metric_name, metric_value in metrics.items():
-            if isinstance(metric_value, torch.Tensor):
-                parsed_metrics[metric_name] = metric_value.mean()
-            elif isinstance(metric_value, list):
-                parsed_metrics[metric_name] = sum(_metric.mean() for _metric in metric_value)
-            elif isinstance(metric_value, dict):
-                for name, value in metric_value.items():
-                    parsed_metrics[name] = value
+            if "loss" in metric_name:
+                if isinstance(metric_value, torch.Tensor):
+                    parsed_metrics[metric_name] = metric_value.mean()
+                elif isinstance(metric_value, list):
+                    parsed_metrics[metric_name] = sum(_metric.mean() for _metric in metric_value)
+                elif isinstance(metric_value, dict):
+                    for name, value in metric_value.items():
+                        parsed_metrics[name] = value
+                else:
+                    raise TypeError(
+                        f'{metric_name} is not a tensor or list(dict) of tensors')
             else:
-                raise TypeError(
-                    f'{metric_name} is not a tensor or list(dict) of tensors')
+                parsed_metrics[metric_name] = metric_value
 
         loss = sum(_value for _key, _value in parsed_metrics.items()
                    if 'loss' in _key)

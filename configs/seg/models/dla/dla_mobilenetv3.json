@@ -1,5 +1,5 @@
 {
-    "pretrained": "model_zoo/pth/backbone/resnet/resnet18.pth",
+    "pretrained": "model_zoo/pth/backbone/mobilenet/mobilenetv3_large.pth",
     "model": {
         "type": "EncoderDecoder",
         "backbone": {
@@ -10,12 +10,12 @@
         },
         "decode_head": {
             "type": "DLAHead",
-            "in_channels": [16, 24, 40, 80, 160],
+            "in_channels": [16, 24, 40, 112, 160],
             "down_ratio": 2,
             "num_classes": 2,
             "align_corners": true,
-            "norm_cfg": {"type": "BN", "momentum": 0.1, "track_running_stats": true},
-            "act_cfg": {"type": "LeakyReLU", "inplace": true, "negative_slope": 0.01},
+            "norm_cfg": {"type": "BN"},
+            "act_cfg": {"type": "LeakyReLU"},
             "loss": {"type": "CrossEntropyLoss"}
         }
     }

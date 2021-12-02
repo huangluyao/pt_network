@@ -54,6 +54,9 @@ def statistics_data(image_paths, dataset_type):
         return statistics_voc_data(image_paths)
     elif dataset_type == "ClsDataSet":
         return statistics_cls_data(image_paths)
+    elif dataset_type == "SegDataset":
+        return statistics_cls_data(image_paths)
+
 
 
 def statistics_labelme_txt_data(image_paths):

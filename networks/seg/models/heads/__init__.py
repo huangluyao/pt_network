@@ -7,4 +7,5 @@ from .dla_head import DLAHead
 from .stdc_head import STDCHead
 from .memory_head import MemoryHead
 from .dahead import DAHead
+from .dla_tf_head import *
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

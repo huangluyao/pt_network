@@ -1,4 +1,6 @@
 import os
+import time
+
 import torch
 from test_utils.datasets import build_dataset, statistics_data
 from .utils import update_dateset_info, build_model, set_random_seed
@@ -12,7 +14,7 @@ def cfg2trainer(cfg, logger):
 
     # 初始化训练设备
     # init_distributed_mode(cfg)
-    set_random_seed(2021)
+    set_random_seed(2020)
 
     # 统计数据集信息
     input_size = cfg.dataset.pop("input_size")

@@ -99,10 +99,10 @@ class EncoderDecoder(BaseSegmentor):
         """Run forward function and calculate loss for decode head in
         training."""
         losses = dict()
-        loss_decode = self.decode_head.forward_train(x, ground_truth)
+        loss_decode, seg_logit = self.decode_head.forward_train(x, ground_truth)
 
         losses.update(add_prefix(loss_decode, 'decode'))
-        return losses
+        return losses, seg_logit
 
     def _decode_head_forward_infer(self, x):
         """Run forward function and calculate loss for decode head in
@@ -146,7 +146,7 @@ class EncoderDecoder(BaseSegmentor):
 
         losses = dict()
         gt_masks = torch.from_numpy(ground_truth['gt_masks']).to(inputs.device, dtype=inputs.dtype)
-        loss_decode = self._decode_head_forward_train(x, gt_masks)
+        loss_decode, seg_logit = self._decode_head_forward_train(x, gt_masks)
         losses.update(loss_decode)
 
         if self.with_auxiliary_head:
@@ -154,7 +154,16 @@ class EncoderDecoder(BaseSegmentor):
                 x, gt_masks)
             losses.update(loss_aux)
 
-        return losses
+        if self.num_classes > 1:
+            seg_probs = torch.softmax(seg_logit, dim=1)
+        else:
+            seg_probs = torch.sigmoid(seg_logit)
+
+        return dict(
+                losses=losses,
+                preds=seg_probs,
+                seg_logit=seg_logit
+                )
 
     def forward_infer(self, inputs):
         seg_logit = self.encode_decode(inputs)
@@ -162,5 +171,8 @@ class EncoderDecoder(BaseSegmentor):
             seg_probs = torch.softmax(seg_logit, dim=1)
         else:
             seg_probs = torch.sigmoid(seg_logit)
-        return seg_probs
+        return dict(
+                preds=seg_probs,
+                seg_logit=seg_logit
+                )
 
