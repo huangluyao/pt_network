@@ -1,0 +1,8 @@
+{
+    "__base__": [
+        "configs/seg/models/dla/dla_timm_mobilnetv3.json",
+        "tools/config/__base__/augmentation/base_augmentation.json",
+        "tools/config/__base__/seg_base.json"
+    ],
+    "task": "segmentation"
+}

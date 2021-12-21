@@ -1,6 +1,8 @@
 # _*_coding=utf-8 _*_
 # @author Luyao Huang
 # @date 2021/6/10 下午5:45
+import random
+
 import cv2
 import numpy as np
 from ..utils import preserve_channel_dim, preserve_shape, preserve_mask_channel_dim
@@ -380,3 +382,48 @@ def padding_resize_box(boxes, org_size , size):
     boxes[:4] = [x * resize_ratio+del_w if i%2==0 else x * resize_ratio+del_h for i, x in enumerate(boxes[:4])]
 
     return tuple(boxes)
+
+
+def copy_paste_img(img_main, mask_src, img_src, rescale_ratio, padding_value=166):
+
+    mask_src = scale_jitter(mask_src, rescale_ratio, cv2.INTER_NEAREST)
+    img_src = scale_jitter(img_src, rescale_ratio, cv2.INTER_LINEAR, padding_value=padding_value)
+
+    img_main = img_add(img_main, img_src, mask_src)
+
+    return img_main
+
+def copy_paste_mask(mask_main, mask_src, rescale_ratio, padding_value=0):
+    mask_src = scale_jitter(mask_src, rescale_ratio, cv2.INTER_NEAREST, padding_value=padding_value)
+    mask_main = img_add(mask_main, mask_src, mask_src)
+
+    return mask_main
+
+def img_add(img_main, img_src, mask_src):
+    h, w = img_main.shape[:2]
+    mask = np.asarray(mask_src, dtype=np.uint8)
+    sub_img01 = cv2.add(img_src, np.zeros(np.shape(img_src), dtype=np.uint8), mask=mask)
+    mask_02 = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
+    mask_02 = np.asarray(mask_02, dtype=np.uint8)
+    sub_img02 = cv2.add(img_main, np.zeros(np.shape(img_main), dtype=np.uint8),
+                        mask=mask_02)
+
+    img_main = img_main-sub_img02++ cv2.resize(sub_img01, (img_main.shape[1], img_main.shape[0]),
+                                                 interpolation=cv2.INTER_NEAREST)
+
+    return img_main
+
+def scale_jitter(img, rescale_ratio, interpolation=cv2.INTER_NEAREST, padding_value=0):
+    h, w, = img.shape[:2]
+    # rescale
+    h_new, w_new = int(h * rescale_ratio), int(w * rescale_ratio)
+    img = cv2.resize(img, (w_new, h_new), interpolation=interpolation)
+
+    # crop or padding
+    x, y = int(np.random.uniform(0, abs(w_new - w))), int(np.random.uniform(0, abs(h_new - h)))
+    if rescale_ratio <= 1.0:  # padding
+        img_pad = np.ones((h, w, 3), dtype=np.uint8) * padding_value
+        img_pad[y:y+h_new, x:x+w_new, :] = img
+        return img_pad
+    else:  # crop
+        return  img[y:y+h, x:x+w, :]

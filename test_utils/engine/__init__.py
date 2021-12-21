@@ -3,3 +3,4 @@
 # @date 2021/6/11 上午11:11
 from .simple_trainer import SimplerTrainer
 from .dynamic_iter_trainer import DynamicIterTrainer
+from .optimizer import *

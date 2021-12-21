@@ -1,4 +1,6 @@
 import numpy as np
+import cv2
+from scipy.ndimage.morphology import distance_transform_edt
 from .utils import *
 
 # ---------------------------------------- CrossEntropy base------------------------------------------
@@ -216,3 +218,21 @@ def smooth_l1_loss(pred, target, weight, beta=1.0, ignore_label=-100, reduction=
                        diff - 0.5 * beta)
 
     return weight_reduce_loss(loss, weight, reduction, avg_factor)
+
+
+def gaussian_transform(batch_mask, gamma=1):
+
+    c, h, w = batch_mask.shape
+    dst_trf = torch.zeros_like(batch_mask)
+    np_mask = batch_mask.cpu().numpy()
+
+    for b, mask in enumerate(np_mask):
+        num_labels, labels = cv2.connectedComponents((mask * 255.0).astype(np.uint8), connectivity=8)
+        for idx in range(1, num_labels):
+            mask_roi = np.zeros((h, w))
+            k = labels == idx
+            mask_roi[k] = 1
+            dst_trf_roi = cv2.GaussianBlur(mask_roi, (3, 3), gamma) + 1
+            dst_trf[b] += torch.tensor(dst_trf_roi,dtype=torch.float32, device=batch_mask.device)
+
+    return dst_trf

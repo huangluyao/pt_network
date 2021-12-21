@@ -15,12 +15,13 @@
         "decode_head": {
             "type": "DLAHead",
             "in_channels": [32, 64, 128, 256, 512],
-            "down_ratio": 2,
-            "num_classes": 2,
-            "align_corners": true,
-            "norm_cfg": {"type": "BN", "momentum": 0.1, "track_running_stats": true},
-            "act_cfg": {"type": "LeakyReLU", "inplace": true, "negative_slope": 0.01},
-            "loss": {"type": "CrossEntropyLoss"}
+            "num_classes": 1,
+            "align_corners": false,
+            "dropout": 0.0,
+            "upsample_cfg": {"type": "bilinear", "scale_factor":2, "align_corners": false},
+            "norm_cfg":{"type": "BRN", "rmax_inc_step": 1000, "dmax_inc_step": 500},
+            "act_cfg": {"type": "xUnitS"},
+            "loss": [{"type": "LovaszLoss"}, {"type": "CrossEntropyLoss"}, {"type": "BoundaryLoss"}]
         }
     }
 }

@@ -11,9 +11,9 @@
     },
     "model": {
     "decode_head": {
-        "upsample_cfg": {"type": "deconv"},
+        "upsample_cfg": {"type": "bilinear", "scale_factor":2},
         "norm_cfg":{"type": "BRN", "rmax_inc_step": 1000, "dmax_inc_step": 500},
-        "act_cfg": {"type": "xUnitS"},
+        "act_cfg": {"type": "Tanh"},
         "loss": [{"type": "LovaszLoss"}, {"type": "CrossEntropyLoss"}, {"type": "BoundaryLoss"}]
         }
     }

@@ -14,9 +14,9 @@
             "down_ratio": 2,
             "num_classes": 2,
             "align_corners": true,
-            "norm_cfg": {"type": "BN"},
-            "act_cfg": {"type": "ReLU6"},
-            "loss": [{"type": "LovaszLoss"}, {"type": "SmoothL1Loss"}, {"type": "BoundaryLoss"}]
+            "norm_cfg":{"type": "BRN", "rmax_inc_step": 1000, "dmax_inc_step": 500},
+            "act_cfg": {"type": "xUnitS"},
+            "loss": [{"type": "LovaszLoss"}, {"type": "CrossEntropyLoss"}, {"type": "BoundaryLoss"}]
         }
     }
 }

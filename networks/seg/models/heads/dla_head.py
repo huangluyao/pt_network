@@ -11,6 +11,8 @@ from ..criterions.detail_aggregate_loss import DetailAggregateLoss
 from .memory_head import ASPP, FeaturesMemory
 from ...specific.samplers import build_pixel_sampler
 
+from scipy.ndimage.morphology import distance_transform_edt
+
 def fill_up_weights(up):
     w = up.weight.data
     f = math.ceil(w.size(2) / 2)
@@ -238,7 +240,7 @@ class DLAHead(nn.Module):
 
         x = self.dla_up(x)
         x = self.fc(x)
-        return self.up(x)
+        return x
 
     def init_weights(self):
 
@@ -300,6 +302,7 @@ class DLAHead(nn.Module):
         dict[str, Tensor]
             a dictionary of loss components
         """
+
         seg_logits = self.forward(inputs)
         losses = self.losses(seg_logits, gt_semantic_seg)
         return losses, seg_logits

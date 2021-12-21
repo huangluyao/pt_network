@@ -1,0 +1,20 @@
+{
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "type": "TIMMBackbone",
+            "model_name": "hrnet_w18"
+        },
+        "decode_head": {
+            "type": "DLAHead",
+            "in_channels": [64, 128, 256, 512, 1024],
+            "num_classes": 1,
+            "align_corners": false,
+            "dropout": 0.0,
+            "upsample_cfg": {"type": "bilinear", "scale_factor":2, "align_corners": false},
+            "norm_cfg":{"type": "BRN", "rmax_inc_step": 1000, "dmax_inc_step": 500},
+            "act_cfg": {"type": "xUnitS"},
+            "loss": [{"type": "LovaszLoss"}, {"type": "CrossEntropyLoss"}, {"type": "BoundaryLoss"}]
+        }
+    }
+}

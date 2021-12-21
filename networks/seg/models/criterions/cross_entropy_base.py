@@ -157,3 +157,42 @@ class AsymmetricLoss(BaseLoss):
 
         return loss_cls
 
+
+@LOSSES.register_module()
+class GaussianCrossEntropyLoss(BaseLoss):
+
+    def __init__(self, class_weight=None, gamma=1, ignore_label=-100, **kwargs):
+        super(GaussianCrossEntropyLoss, self).__init__(loss_name='loss_gaussian_ce', **kwargs)
+        self.class_weight = class_weight
+        self.ignore_label = ignore_label
+        self.gamma = gamma
+    def forward(self,
+                pred,
+                target,
+                weight=None,
+                avg_factor=None,
+                reduction_override=None,
+                ignore_label = None,
+                **kwargs):
+        assert reduction_override in (None, 'none', 'mean', 'sum')
+        reduction = (
+            reduction_override if reduction_override else self.reduction)
+
+        if self.class_weight is not None:
+            class_weight = pred.new_tensor(self.class_weight)
+        else:
+            class_weight = None
+
+        if ignore_label is None:
+            ignore_label = self.ignore_label
+
+        loss_cls = self.loss_weight * cross_entropy(
+            pred,
+            target,
+            weight=gaussian_transform(target, self.gamma),
+            class_weight=class_weight,
+            reduction=reduction,
+            avg_factor=avg_factor,
+            ignore_index=ignore_label)
+
+        return loss_cls

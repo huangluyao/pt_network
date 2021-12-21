@@ -6,11 +6,11 @@
         "weight_decay": 0.0001
     },
     "dataset": {
-        "input_size": [224, 224],
+        "input_size": [256, 256],
         "type": "SegDataset",
         "use_mosaic": false,
-        "train_data_path": "/workspace/data/seg/fm/train",
-        "val_data_path": "/workspace/data/seg/fm/val"
+        "train_data_path": "/workspace/data/seg/dos_stc/train",
+        "val_data_path": "/workspace/data/seg/dos_stc/val"
     },
     "loader_cfg": {
         "batch_size": 4,

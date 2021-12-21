@@ -1,7 +1,5 @@
 import numbers
-
-import cv2
-import random
+import os
 import torch
 from .. import TRANSFORM
 from .transforms_interface import BasicTransform
@@ -265,6 +263,7 @@ class GaussNoise(BasicTransform):
     def targets(self):
         return {"image": self.apply} # image only transform
 
+
 @TRANSFORM.registry()
 class ToTensor(BasicTransform):
     def __init__(self, transpose_mask=False, **kwargs):
@@ -284,3 +283,41 @@ class ToTensor(BasicTransform):
         if self.transpose_mask and mask.ndim == 3:
             mask = mask.transpose(2, 0, 1)
         return torch.from_numpy(mask)
+
+
+@TRANSFORM.registry()
+class CopyPaste(BasicTransform):
+    def __init__(self, image_infos, min_scale=0.5, max_scale=1.5, **kwargs):
+        super(CopyPaste, self).__init__(**kwargs)
+        self.img_infos = self.check_image_infos(image_infos)
+        self.min_scale = min_scale
+        self.max_scale = max_scale
+
+
+    def get_params(self, **params):
+
+        image_info = np.random.choice(self.img_infos)
+        image = cv2.imread(image_info["image_path"])
+        mask = np.zeros(image.shape[:2])
+        for label_point, index in zip(image_info["label_points"], image_info["label_index"]):
+            mask = cv2.fillPoly(mask, [np.int0(label_point)], (int(index)))
+        rescale_ratio = np.random.uniform(self.min_scale, self.max_scale)
+
+        return {
+            "img_src":image,
+            "mask_src":mask,
+            "rescale_ratio":rescale_ratio
+        }
+
+        pass
+
+    def apply(self, img, **params):
+        return copy_paste_img(img, params["mask_src"], params["img_src"], params["rescale_ratio"])
+
+    def apply_to_mask(self, img, **params):
+        return copy_paste_mask(img, params["mask_scr"], params["rescale_ratio"], 0)
+
+    def check_image_infos(self, image_infos):
+        # check image_infos have object
+        return [image_info for image_info in image_infos if len(image_info["label_points"]) > 0]
+

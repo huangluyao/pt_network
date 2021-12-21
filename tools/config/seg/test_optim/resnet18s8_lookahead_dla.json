@@ -1,0 +1,14 @@
+{
+    "__base__": [
+        "configs/seg/models/dla/dla_resnet18s8.json",
+        "tools/config/__base__/augmentation/base_augmentation.json",
+        "tools/config/__base__/seg_base.json"
+    ],
+    "task": "segmentation",
+
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "use_lookahead": true
+    }
+}

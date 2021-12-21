@@ -22,7 +22,7 @@ def parse_config_file(config_file):
 def setup():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config',
-                        default="tools/config/seg/test_other/dlastrong_mobilnetv3.json",
+                        default="tools/config/seg/test_optim/resnet18s8_sgdp_dla.json",
                         type=str)
     parser.add_argument('-p', '--pretrained', type=str,
                         default='',

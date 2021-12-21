@@ -6,8 +6,7 @@ from test_utils.datasets import build_dataset, statistics_data
 from .utils import update_dateset_info, build_model, set_random_seed
 from ..engine.data_loader import build_data_loader, build_gan_loader
 from ..evaluator import model_info
-from ..engine.optimizer import build_optimizer, build_scheduler, build_optimizers
-from ..engine import SimplerTrainer, DynamicIterTrainer
+from ..engine import SimplerTrainer, DynamicIterTrainer, build_optimizer, build_optimizers
 from .file_io import save_json
 
 def cfg2trainer(cfg, logger):
@@ -92,7 +91,7 @@ def cfg2trainer(cfg, logger):
                 rank=cfg.rank)
     else:
         # 创建优化器和学习率下降策略
-        optimizer = build_optimizer(model, cfg['optimizer'])
+        optimizer = build_optimizer(model, cfg)
         trainer = SimplerTrainer(
             cfg=cfg,
             device=device,
