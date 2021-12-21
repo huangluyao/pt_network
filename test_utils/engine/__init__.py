@@ -4,3 +4,4 @@
 from .simple_trainer import SimplerTrainer
 from .dynamic_iter_trainer import DynamicIterTrainer
 from .optimizer import *
+from .builder import build_gan_loader, build_data_loader

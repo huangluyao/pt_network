@@ -4,7 +4,7 @@ import time
 import torch
 from test_utils.datasets import build_dataset, statistics_data
 from .utils import update_dateset_info, build_model, set_random_seed
-from ..engine.data_loader import build_data_loader, build_gan_loader
+from ..engine import build_data_loader, build_gan_loader
 from ..evaluator import model_info
 from ..engine import SimplerTrainer, DynamicIterTrainer, build_optimizer, build_optimizers
 from .file_io import save_json
