@@ -8,7 +8,7 @@ from .base_eval_hooks import BaseEvalHook
 from ..metrics import *
 from ..draw_plot import draw_plot
 from ...engine.hooks import HOOKS
-
+from tqdm import tqdm
 
 @HOOKS.registry()
 class SegEvalHook(BaseEvalHook):
@@ -48,7 +48,7 @@ class SegEvalHook(BaseEvalHook):
         model.eval()
         img_paths = []
         infer_times = []
-        for step, (img_batch, label_batch) in enumerate(dataloader):
+        for step, (img_batch, label_batch) in enumerate(tqdm(dataloader)):
             img_paths += [img_path for img_path in label_batch['image_path']]
             if not isinstance(img_batch, torch.Tensor):
                 img_batch = torch.from_numpy(img_batch).to(model.device, dtype=torch.float32)
@@ -84,17 +84,20 @@ class SegEvalHook(BaseEvalHook):
 
         logger.info("infer time for each image %.4fs" % (sum(infer_times) / len(infer_times)))
         if self.num_classes==1:
-            auc, aupr, ks, bestf1 = calculate_auc_aupr_ks_bestf1(y_prob, y_true)
-            self._auc_per_epoch.append(auc)
-            self._aupr_per_epoch.append(aupr)
-            self._ks_per_epoch.append(ks)
-            self._best_f1_per_epoch.append(bestf1)
-            self._cur_epoch = len(self._best_f1_per_epoch)
+            p, r, f1, iou, threshold = calculate_precision_recall_f1_each_threshold(y_prob, y_true)
+            self._precision_per_epoch.append(p)
+            self._recall_per_epoch.append(r)
+            self._f1_per_epoch.append(f1)
+            self._iou_per_epoch.append(iou)
+            self.vis_score_threshold = threshold
+            accuracy = np.sum(y_true == y_prob) / (y_prob.shape[0] * y_prob.shape[1] * y_prob.shape[2])
+            self._accuracy_per_epoch.append(accuracy)
+            logger.info("Validation precision = %.4f" %p)
+            logger.info("Validation recall = %.4f" %r)
+            logger.info("Validation f1_scores = %.4f" %f1)
+            logger.info("Validation iou = %.4f" %iou)
+            logger.info("best threshold  = %.3f" %threshold)
 
-            logger.info("Validation AUC = %.4f" %auc)
-            logger.info("Validation AUPR = %.4f" %aupr)
-            logger.info("Validation KS = %.4f" %ks)
-            logger.info("Validation BestF1 = %.4f" %bestf1)
         else:
             precision_per_class, recall_per_class, f1_per_class1 = calculate_precision_recall_f1_per_class(
                 y_pred, y_true, num_classes=self.num_classes
@@ -107,7 +110,7 @@ class SegEvalHook(BaseEvalHook):
             self._f1_per_epoch.append(f1_per_class1)
             self._iou_per_epoch.append(iou_per_class)
             self._accuracy_per_epoch.append(accuracy)
-            self._cur_epoch = len(self._f1_per_epoch)
+
             class_name_len = [len(name) for name in self.class_names]
             max_len = max(class_name_len)+4
             logger.info("Validation metric per class:")
@@ -130,34 +133,36 @@ class SegEvalHook(BaseEvalHook):
                 metric_str = ''.join(metric_list)
                 logger.info(self.class_names[idx].ljust(max_len,' ') + metric_str)
 
-            if self.is_val_best_epoch():
-                prefix = 'Best performance so far, '
-                self.visualize(img_paths, y_prob)
-                logger.info("Saving checkpoint of best validation metrics.")
-                # save checkpoint
-                state = {
-                    'arch': type(model).__name__,
-                    'epoch': self._cur_epoch,
-                    'state_dict': model.state_dict(),
-                }
-                torch.save(state, "%s/val_best.pth"%(self._checkpoint_dir))
-            else:
-                prefix = ''
+        self._cur_epoch = len(self._f1_per_epoch)
+        if self.is_val_best_epoch():
+            prefix = 'Best performance so far, '
+            self.visualize(img_paths, y_prob)
+            logger.info("Saving checkpoint of best validation metrics.")
+            # save checkpoint
+            state = {
+                'arch': type(model).__name__,
+                'epoch': self._cur_epoch,
+                'state_dict': model.state_dict(),
+            }
+            torch.save(state, "%s/val_best.pth"%(self._checkpoint_dir))
+        else:
+            prefix = ''
 
-            logger.info(prefix + 'mIoU = %.4f' % np.mean(iou_per_class))
-            mean_iou_per_epoch = [np.mean(iou) for iou in self._iou_per_epoch]
-            metrices = dict(accuracy=self._accuracy_per_epoch, iou=mean_iou_per_epoch,
-                            loss=self._avg_loss_per_epoch,
-                            learning_rate=self._lr_per_epoch
-                            )
-            draw_plot(metrices, os.path.dirname(self._metric_vs_epoch_file))
+        logger.info(prefix + 'mIoU = %.4f' % np.mean(self._iou_per_epoch[-1]))
+        mean_iou_per_epoch = [np.mean(iou) for iou in self._iou_per_epoch]
+        metrices = dict(accuracy=self._accuracy_per_epoch, iou=mean_iou_per_epoch,
+                        loss=self._avg_loss_per_epoch,
+                        learning_rate=self._lr_per_epoch
+                        )
+        draw_plot(metrices, os.path.dirname(self._metric_vs_epoch_file))
 
 
     def is_val_best_epoch(self):
         if self.num_classes == 1:
+
             if self.metric == 'f1':
-                best_metric = max(self._best_f1_per_epoch)
-                if self._best_f1_per_epoch[-1] >= best_metric:
+                best_metric = max(self._f1_per_epoch)
+                if self._f1_per_epoch[-1] >= best_metric:
                     return True
             else:
                 best_metric = max(self._accuracy_per_epoch)

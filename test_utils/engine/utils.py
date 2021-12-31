@@ -78,12 +78,15 @@ def statistics_data(image_paths):
 
 
 def put_data(dataset, index_queue, image_queue, collate_fn):
-    while True:
-        batch_index = index_queue.get()
-        data = [dataset[i] for i in batch_index]
-        data = collate_fn(data)
-        image_queue.put(data)
-        del data, batch_index
+    try:
+        while True:
+            batch_index = index_queue.get()
+            data = [dataset[i] for i in batch_index]
+            data = collate_fn(data)
+            image_queue.put(data)
+            del data, batch_index
+    except KeyboardInterrupt:
+        print("process exit")
 
 
 def default_collate(batch):

@@ -2,7 +2,7 @@ import torch
 from networks.base.utils import Registry, build_from_cfg
 from ..datasets import build_dataset
 from .data_loader import SimpleDataLoader
-
+from copy import deepcopy
 
 RUNNERS = Registry('runner')
 OPTIMIZER = Registry('optimizer')
@@ -54,8 +54,12 @@ def build_data_loader(dataset_cfg, loader_cfg,
     augmentations = dataset_cfg.augmentations
 
 
-    train_cfg_dict = dict(type=data_type, data_path=train_data_path, augmentations=augmentations)
-    val_cfg_dict = dict(type=data_type, data_path=val_data_path, mode='val',augmentations=augmentations)
+    train_cfg_dict = deepcopy(dataset_cfg)
+    train_cfg_dict.update(dict(type=data_type, data_path=train_data_path, augmentations=augmentations))
+
+    val_cfg_dict = deepcopy(dataset_cfg)
+    val_cfg_dict.update(type=data_type, data_path=val_data_path, mode='val',augmentations=augmentations)
+
 
     train_dataset = build_dataset(train_cfg_dict)
     val_dataset = build_dataset(val_cfg_dict)

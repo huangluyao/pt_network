@@ -1,0 +1,68 @@
+{
+    "__base__": [
+    "tools/config/__base__/seg_base.json",
+    "tools/config/__base__/augmentation/base_augmentation.json"
+    ],
+
+    "task": "segmentation",
+    "pretrained": "nas://model_zoo/pth/gluoncv/ResNet18_v1b.pth",
+    "model": {
+        "type": "ChangeEncoderDecoder",
+        "backbone": {
+            "type": "ResNet",
+            "depth": 18,
+            "in_channels": 1,
+            "out_levels": [2, 3, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "PRAHead",
+            "in_channels": 64,
+            "head_width": 64,
+            "num_classes": 1,
+            "loss": [{"type": "DiceLoss", "multi_class": false}, {"type": "CrossEntropyLoss", "use_sigmoid": true}]
+        },
+        "siamese_layer": {
+            "type": "PixelCat",
+            "in_c": 64,
+            "ou_c": 1
+        }
+    },
+    "dataset": {
+        "input_size": [512, 512],
+        "type": "ChangeSegDataset",
+        "use_mosaic": false,
+        "train_data_path": "/workspace/nas/datasets/huangluyao/other/seg_test/train_data_list.txt",
+        "val_data_path": "/workspace/nas/datasets/huangluyao/other/seg_test/val_data_list.txt",
+        "data_root": "/workspace/nas/datasets/huangluyao/other/seg_test",
+        "statistics_data": {
+            "means": [131.74, 131.74, 131.74],
+            "stds": [92.858, 92.858, 92.858]
+        }
+    },
+    "hook_cfgs": [
+        {
+            "type": "CosineRestartLrUpdaterHook",
+            "min_lr": 1e-5,
+            "by_epoch": true,
+            "warmup": "linear",
+            "warmup_iters": 50,
+            "warmup_ratio": 0.1,
+            "periods": [25, 75, 125, 200],
+            "restart_weights": [1, 0.75, 0.5, 0.5]
+        },
+        {
+            "type": "OptimizerHook",
+            "grad_clip": null
+        },
+        {
+            "type": "SegEvalHook",
+            "start": null,
+            "evaluation_first": true,
+            "interval": 1
+        },
+        {
+            "type": "IterTimerHook"
+        }
+    ]
+}

@@ -9,11 +9,19 @@ class DiceLoss(BaseLoss):
                  smooth=1,
                  exponent=2,
                  use_log=False,
+                 multi_class=True,
                  **kwargs):
         self.smooth = smooth
         self.exponent = exponent
         self.use_log = use_log
+        self.multi_class = multi_class
         super(DiceLoss, self).__init__(loss_name='loss_dice',  **kwargs)
+
+        if multi_class:
+            self.cls_criterion = dice_loss
+        else:
+            self.cls_criterion = binary_dice_loss
+
 
     def forward(self,
                 pred,
@@ -28,8 +36,10 @@ class DiceLoss(BaseLoss):
         reduction = (reduction_override if reduction_override else self.reduction)
         if ignore_label is None:
             ignore_label = self.ignore_label
+        if not self.multi_class:
+            pred = pred.sigmoid()
 
-        loss = self.loss_weight * dice_loss(
+        loss = self.loss_weight * self.cls_criterion(
             pred,
             target,
             smooth=self.smooth,

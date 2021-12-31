@@ -27,6 +27,7 @@ class BasicTransform:
             "mask": self.apply_to_mask,
             "masks": self.apply_to_masks,
             "bboxes": self.apply_to_bboxes,
+            "images": self.apply_to_images,
         }
 
     def _get_target_function(self, key):
@@ -49,3 +50,6 @@ class BasicTransform:
 
     def get_params(self, **params):
         return {}
+
+    def apply_to_images(self, imgs, **params):
+        return [self.apply(img, **params) for img in imgs]

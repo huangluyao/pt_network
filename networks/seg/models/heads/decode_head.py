@@ -84,7 +84,17 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
         self.norm_cfg = norm_cfg
         self.act_cfg = act_cfg
         self.in_index = in_index
-        self.loss = build_loss(loss)
+
+        if isinstance(loss, dict):
+            self.loss_decode = build_loss(loss)
+        elif isinstance(loss, (list, tuple)):
+            self.loss_decode = nn.ModuleList()
+            for loss in loss:
+                self.loss_decode.append(build_loss(loss))
+        else:
+            raise TypeError(f'loss_decode must be a dict or sequence of dict,\
+                but got {type(loss)}')
+
         self.ignore_label = ignore_label
         self.align_corners = align_corners
         if sampler is not None:
@@ -233,9 +243,17 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
         else:
             seg_weight = None
         seg_label = seg_label.squeeze(1)
-        loss['loss_seg'] = self.loss(
-            seg_logit,
-            seg_label,
-            weight=seg_weight,
-            ignore_label=self.ignore_label)
+
+        if not isinstance(self.loss_decode, nn.ModuleList):
+            losses_decode = [self.loss_decode]
+        else:
+            losses_decode = self.loss_decode
+
+        for loss_decode in losses_decode:
+            loss[loss_decode.loss_name] = loss_decode(
+                seg_logit,
+                seg_label,
+                weight=seg_weight,
+                ignore_label=self.ignore_label)
+
         return loss

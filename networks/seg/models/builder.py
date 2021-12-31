@@ -8,7 +8,7 @@ HEADS = Registry('head')
 NECKS = Registry('neck')
 LOSSES = Registry('loss')
 METRICS = Registry('metric')
-
+SIAMESE_LAYER = Registry('siamese_layer')
 
 def build_neck(cfg):
     return build_module(cfg, NECKS)
@@ -28,3 +28,7 @@ def build_metric(cfg):
 
 def build_segmentor(cfg, train_cfg=None, test_cfg=None):
     return build_module(cfg, SEGMENTORS, dict(train_cfg=train_cfg, test_cfg=test_cfg))
+
+
+def build_siamese_layer(cfg):
+    return build_from_cfg(cfg, SIAMESE_LAYER, )

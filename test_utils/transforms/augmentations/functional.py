@@ -107,12 +107,16 @@ def bbox_rotate(bbox, angle, rows, cols):
 
     return x_min, y_min, x_min+w, y_min+h
 
-
+@preserve_channel_dim
 def normalize(img, mean, std, scale=1.0):
-    mean = np.array(mean, dtype=np.float32)
-    mean *= scale
 
-    std = np.array(std, dtype=np.float32)
+    if img.shape[-1] == 1: # 灰度图
+        if mean.shape[0] > 1:
+            mean = mean[0]
+        if std.shape[0] > 1:
+            std =std[0]
+
+    mean *= scale
     std *= scale
 
     denominator = np.reciprocal(std, dtype=np.float32)
@@ -338,19 +342,17 @@ def gauss_noise(image, gauss):
     maxval = MAX_VALUES_BY_DTYPE.get(dtype, 1.0)
     return np.clip(image, 0, maxval).astype(dtype)
 
-@preserve_channel_dim
 def padding_resize(image, size):
     resize_h, resize_w = size
-    img_h, img_w, im_c = image.shape
+    img_h, img_w = image.shape[:2]
     resize_ratio = min(resize_w/ img_w, resize_h/img_h)
     new_w = round(img_w*resize_ratio)
     new_h = round(img_h*resize_ratio)
 
     img_resized = cv2.resize(image, (new_w, new_h))
-
-    img_padding = np.full([resize_h, resize_w, im_c], 0).astype(image.dtype)
+    img_padding = np.full_like(image, 0)
     img_padding[(resize_h - new_h) // 2:(resize_h - new_h) // 2 + new_h,
-    (resize_w - new_w) // 2:(resize_w - new_w) // 2 + new_w, :] = img_resized
+    (resize_w - new_w) // 2:(resize_w - new_w) // 2 + new_w, ...] = img_resized
     return img_padding
 
 

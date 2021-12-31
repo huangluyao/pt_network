@@ -5,10 +5,16 @@ from ..builder import LOSSES
 @LOSSES.register_module()
 class CrossEntropyLoss(BaseLoss):
 
-    def __init__(self, class_weight=None, ignore_label=-100, **kwargs):
+    def __init__(self, class_weight=None, ignore_label=-100, use_sigmoid=False, **kwargs):
         super(CrossEntropyLoss, self).__init__(loss_name='loss_ce', **kwargs)
         self.class_weight = class_weight
         self.ignore_label = ignore_label
+        self.use_sigmoid = use_sigmoid
+
+        if use_sigmoid:
+            self.cls_criterion = binary_cross_entropy
+        else:
+            self.cls_criterion = cross_entropy
 
     def forward(self,
                 pred,
@@ -30,7 +36,7 @@ class CrossEntropyLoss(BaseLoss):
         if ignore_label is None:
             ignore_label = self.ignore_label
 
-        loss_cls = self.loss_weight * cross_entropy(
+        loss_cls = self.loss_weight * self.cls_criterion(
             pred,
             target,
             weight=weight,

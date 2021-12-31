@@ -17,19 +17,25 @@ class Resize(BasicTransform):
 
     def apply(self, img, **params):
         return padding_resize(img, (self.height, self.width)) if self.padding else \
-               resize(img, self.height, self.width, self.interpolation)
+            resize(img, self.height, self.width, self.interpolation)
 
     def apply_to_bbox(self, bbox, **params):
         org_size = (params["rows"], params["cols"])
         return padding_resize_box(bbox, org_size, (self.height, self.width)) if self.padding else \
-                resize_box(bbox, org_size, (self.height, self.width))
+            resize_box(bbox, org_size, (self.height, self.width))
 
     def apply_to_mask(self, img, **params):
         return padding_resize_mask(img, (self.height, self.width)) if self.padding else \
             resize(img, self.height, self.width, cv2.INTER_NEAREST)
 
     def get_params(self, **params):
-        return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}
+
+        if params.get("image", None) is not None:
+            return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}
+        elif params.get("images", None) is not None:
+            return {"cols": params["images"][0].shape[1], "rows": params["images"][0].shape[0]}
+        else:
+            raise ValueError("not image in resize")
 
 
 @TRANSFORM.registry()
@@ -43,7 +49,7 @@ class RandomFlip(BasicTransform):
             self.direction = 0
         else:
             raise TypeError('direction must be horizontal, vertical or None,'
-                             f'but got {direction}')
+                            f'but got {direction}')
         super(RandomFlip, self).__init__(**kwargs)
 
     def apply(self, img, **params):
@@ -56,20 +62,25 @@ class RandomFlip(BasicTransform):
         return random_flip(img, self.direction)
 
     def get_params(self, **params):
-        return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}
+        if params.get("image", None) is not None:
+            return {"cols": params["image"].shape[1], "rows": params["image"].shape[0]}
+        elif params.get("images", None) is not None:
+            return {"cols": params["images"][0].shape[1], "rows": params["images"][0].shape[0]}
+        else:
+            raise ValueError("not image in resize")
 
 
 @TRANSFORM.registry()
 class Rotate(BasicTransform):
     def __init__(
-        self,
-        limit,
-        interpolation=cv2.INTER_LINEAR,
-        border_mode=cv2.BORDER_REFLECT_101,
-        value=None,
-        mask_value=None,
-        always_apply=False,
-        prob=0.5,
+            self,
+            limit,
+            interpolation=cv2.INTER_LINEAR,
+            border_mode=cv2.BORDER_REFLECT_101,
+            value=None,
+            mask_value=None,
+            always_apply=False,
+            prob=0.5,
     ):
         super(Rotate, self).__init__(always_apply, prob)
         self.limit = limit
@@ -79,8 +90,12 @@ class Rotate(BasicTransform):
         self.mask_value = mask_value
 
     def get_params(self, **kwargs):
+
+        cols, rows = (kwargs["image"].shape[1], kwargs["image"].shape[0]) if kwargs.get("image", None) is not None else \
+            (kwargs["images"][0].shape[1], kwargs["images"][0].shape[0])
+
         return {"angle": random.uniform(self.limit[0], self.limit[1]),
-                "cols": kwargs["image"].shape[1], "rows": kwargs["image"].shape[0]
+                "cols": cols, "rows": rows
                 }
 
     def apply(self, img, angle=0, interpolation=cv2.INTER_LINEAR, **params):
@@ -98,8 +113,8 @@ class Normalize(BasicTransform):
                  std=(0.229, 0.224, 0.225),
                  scale=1.0, **kwargs):
         super(Normalize, self).__init__(**kwargs)
-        self.mean = mean
-        self.std = std
+        self.mean = np.array(mean)
+        self.std = np.array(std)
         self.scale = scale
 
     def apply(self, img, **params):
@@ -107,16 +122,16 @@ class Normalize(BasicTransform):
 
     @property
     def targets(self):
-        return {"image": self.apply} # image only transform
+        return {"image": self.apply, "images": self.apply_to_images} # image only transform
 
 
 @TRANSFORM.registry()
 class ColorJitter(BasicTransform):
     def __init__(self,
-        brightness=0.2,
-        contrast=0.2,
-        saturation=0.2,
-        hue=0.2, **kwargs):
+                 brightness=0.2,
+                 contrast=0.2,
+                 saturation=0.2,
+                 hue=0.2, **kwargs):
         super(ColorJitter, self).__init__(**kwargs)
         self.brightness = self.__check_values(brightness, "brightness")
         self.contrast = self.__check_values(contrast, "contrast")
@@ -162,7 +177,7 @@ class ColorJitter(BasicTransform):
 
     @property
     def targets(self):
-        return {"image": self.apply} # image only transform
+        return {"image": self.apply, "images": self.apply_to_images} # image only transform
 
 
 @TRANSFORM.registry()
@@ -185,7 +200,9 @@ class MultiplicativeNoise(BasicTransform):
         if self.multiplier[0] == self.multiplier[1]:
             return {"multiplier": np.array([self.multiplier[0]])}
 
-        img = params["image"]
+        img = params.get("image", None)
+        if img is None:
+            img = params.get("images")[0]
 
         h, w = img.shape[:2]
 
@@ -203,7 +220,7 @@ class MultiplicativeNoise(BasicTransform):
 
     @property
     def targets(self):
-        return {"image": self.apply} # image only transform
+        return {"image": self.apply, "images": self.apply_to_images} # image only transform
 
 @TRANSFORM.registry()
 class RandomCrop(BasicTransform):
@@ -216,7 +233,7 @@ class RandomCrop(BasicTransform):
         return random_crop(img, self.height, self.width, h_start, w_start)
 
     def get_params(self, **params):
-        height, width = params["image"].shape[:2]
+        height, width = params["image"].shape[:2] if params.get("image", None) is not None else params.get("images")[0].shape[:2]
         return {"h_start": random.random(), "w_start":random.random(), "rows":width, "cols":height}
 
     def apply_to_mask(self, img, h_start=0, w_start=0, **params):
@@ -251,7 +268,8 @@ class GaussNoise(BasicTransform):
         return gauss_noise(img, gauss=gauss)
 
     def get_params(self, **params):
-        image = params["image"]
+        image = params["image"] if params.get("image", None) is not None else params.get("images")[0]
+
         var = random.uniform(self.var_limit[0], self.var_limit[1])
         sigma = var ** 0.5
         random_state = np.random.RandomState(random.randint(0, 2 ** 32 - 1))
@@ -261,7 +279,7 @@ class GaussNoise(BasicTransform):
 
     @property
     def targets(self):
-        return {"image": self.apply} # image only transform
+        return {"image": self.apply, "images": self.apply_to_images} # image only transform
 
 
 @TRANSFORM.registry()

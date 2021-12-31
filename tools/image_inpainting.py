@@ -12,7 +12,7 @@ from test_utils.utils.checkpoint import load_checkpoint
 
 class ImageInpaintingInfer:
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, pretrained=None):
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -24,11 +24,13 @@ class ImageInpaintingInfer:
         model_cfg = config_dict.get('model')
         self.network = build_gan_model(model_cfg).to(self.device)
         # 寻找网络权重并加载
-        weight_dir = os.path.join(config_dict.get("output_dir"), "weights")
-        iter_weight = {float(iter.split('_')[1].split('.')[0]):iter for iter in os.listdir(weight_dir)}
-        weights = sorted(iter_weight.keys(), reverse=True)
-        load_checkpoint(self.network, os.path.join(weight_dir, iter_weight[weights[0]]))
-
+        if pretrained is not None:
+            load_checkpoint(self.network, pretrained)
+        else:
+            weight_dir = os.path.join(config_dict.get("output_dir"), "weights")
+            iter_weight = {float(iter.split('_')[1].split('.')[0]):iter for iter in os.listdir(weight_dir) if iter.startswith('iter')}
+            weights = sorted(iter_weight.keys(), reverse=True)
+            load_checkpoint(self.network, os.path.join(weight_dir, iter_weight[weights[0]]))
 
         resize_cfg = None
         norm_cfg = None
@@ -40,7 +42,7 @@ class ImageInpaintingInfer:
                 norm_cfg = aug_cfg
             else:
                 continue
-        self.pipeline = Compose([Resize(**resize_cfg),
+        self.pipeline = Compose([
                                  Normalize(**norm_cfg),
                                  ToTensor(transpose_mask=True, always_apply=True)
                                  ])
@@ -48,7 +50,7 @@ class ImageInpaintingInfer:
 
 
     def __call__(self, image, mask):
-
+        image, mask = cv2.resize(image, (512, 192)), cv2.resize(mask, (512, 192))
         result = self.pipeline(image=image, mask=mask)
         result["masked_img"] = (result["image"]*(1-result["mask"][None,...])).unsqueeze(0).to(self.device).float()
         result["mask"] = result["mask"][None, None, ...].to(self.device).float()
@@ -135,7 +137,15 @@ class ImageInpatint:
 
 
 if __name__=="__main__":
-    cfg_file = "export/gan/TwoStageInpaintor_None_ImageInpaintingDataset/2021-11-04-07-17-30/config.json"
+    cfg_file = "export/gan/TwoStageInpaintor_None_ImageInpaintingDataset/2021-12-30-11-39-48/config.json"
+    images_path = "D:/data/labelme/st_5/images"
     app = ImageInpatint(cfg_file)
-    image = cv2.imread("C:/workspace/data/classification/df/train/ok/20210426201651795490_deliver_flex_roi0_c4_8.png")
-    app(image)
+
+    for image_name in os.listdir(images_path):
+        image_path = os.path.join(images_path, image_name)
+
+        image = cv2.imread(image_path)
+        if image is None:
+            continue
+        image = cv2.resize(image, (1024, 384))
+        app(image)

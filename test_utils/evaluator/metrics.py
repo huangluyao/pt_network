@@ -81,6 +81,25 @@ def calculate_auc_aupr_ks_bestf1(y_score, y_true, pos_label=None):
     return np.round(AUC, 4), np.round(AUPR, 4), np.round(ks_value, 4), np.round(bestf1, 4)
 
 
+def calculate_precision_recall_f1_each_threshold(y_prob, y_true):
+    thresholds = np.arange(0.05, 1, 0.05)
+
+    p_list, r_list, f1_list, iou_list = [], [], [], []
+    for threshold in thresholds:
+        y_pred = y_prob > threshold
+        p, r, f1 = calculate_precision_recall_f1(y_pred, y_true)
+        iou = calculate_iou(y_pred, y_true)
+        p_list.append(p)
+        r_list.append(r)
+        f1_list.append(f1)
+        iou_list.append(iou)
+
+    best_iou = max(iou_list)
+    best_index = iou_list.index(best_iou)
+
+    return p_list[best_index], r_list[best_index], f1_list[best_index], best_iou, thresholds[best_index]
+
+
 def calculate_precision_recall_f1(y_pred, y_true):
     TP = np.sum(y_pred * y_true)
     FP = np.sum(y_pred * (1-y_true))

@@ -14,8 +14,8 @@ class TwoStageInpaintor(Base_GAN):
                  loss_l1_valid=None,
                  train_cfg=None,
                  test_cfg=None,
-                 stage1_loss_type=('loss_l1_hole',),
-                 stage2_loss_type=('loss_l1_hole', 'loss_gan'),
+                 stage1_loss_type=('loss_l1_hole', 'loss_l1_valid'),
+                 stage2_loss_type=('loss_l1_hole', 'loss_l1_valid', 'loss_gan'),
                  input_with_ones=True,
                  disc_input_with_mask=False,
                  **kwargs

@@ -14,7 +14,7 @@
     },
     "loader_cfg": {
         "batch_size": 4,
-        "num_workers": 0
+        "num_workers": 4
     },
 
     "use_ema":false,

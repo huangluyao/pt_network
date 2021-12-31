@@ -16,7 +16,7 @@ def build_model(cfg, num_classes, logger):
                            "detection":["bbox_head"],
                            "segmentation":["decode_head", "auxiliary_head"]
                            }
-    num_classes_cfgs = [model_cfg.get(head_cfg, None) for head_cfg in number_classes_model.get(cfg.get("task"), None)]
+    num_classes_cfgs = [model_cfg.get(head_cfg, None) for head_cfg in number_classes_model.get(cfg.get("task"), [])]
     if num_classes_cfgs:
         for c in num_classes_cfgs:
             if c is not None:

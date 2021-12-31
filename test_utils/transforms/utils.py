@@ -22,9 +22,12 @@ def preserve_channel_dim(func):
     """
     def wrapped_function(img, *args, **kwargs):
         shape = img.shape
-        result = func(img, *args, **kwargs)
-        if len(shape) == 3 and shape[-1] == 1 and len(result.shape) == 2:
-            result = np.expand_dims(result, axis=-1)
+        if len(shape) == 2:
+            img = np.expand_dims(img, axis=-1)
+            result = func(img, *args, **kwargs)
+            result = np.squeeze(result)
+        else:
+            result = func(img, *args, **kwargs)
         return result
 
     return wrapped_function

@@ -11,7 +11,6 @@ import tempfile
 import platform
 
 
-
 def mkdir(path):
     if not os.path.isdir(path):
         parent_path = os.path.dirname(path)

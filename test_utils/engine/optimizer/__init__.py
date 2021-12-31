@@ -14,7 +14,7 @@ def build_optimizer(model, cfg):
     if hasattr(model, 'module'):
         model = model.module
 
-    _optimizer_cfg = cfg['optimizer'].copy()
+    _optimizer_cfg = cfg['optimizer'].copy() if "optimizer" in cfg else cfg.copy()
     use_lookahead = _optimizer_cfg.pop('use_lookahead', False)
     _optimizer_cfg['params'] = model.parameters()
     if _optimizer_cfg.get('type', 'SGD') == "Ranger21":

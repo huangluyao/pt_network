@@ -6,5 +6,5 @@ from .heads import *
 from .criterions import *
 from .necks import *
 from .segmentors import *
-
+from .siamese_layer import *
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

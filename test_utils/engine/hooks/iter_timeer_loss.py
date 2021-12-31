@@ -22,8 +22,8 @@ class IterTimerHook(Hook):
 
         cur_lr = runner.optimizer.param_groups[0]["lr"]
         if runner.inner_iter % 10 == 0:
-            step_status = '=> Step %6d \tTime %5.2f \tLr %2.6f \t[Loss]:' % (
-                runner.inner_iter, step_time, cur_lr)
+            step_status = '=> Step %6d/%6d \tTime %5.2f \tLr %2.6f \t[Loss]:' % (
+                runner.inner_iter, len(runner.data_loader), step_time, cur_lr)
             for key in outputs:
                 step_status += ' %s: %7.4f' % (key, outputs[key].detach().cpu().numpy())
             runner.logger.info(step_status)

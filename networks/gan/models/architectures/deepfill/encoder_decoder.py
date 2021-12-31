@@ -114,7 +114,7 @@ class DeepFillDecoder(nn.Module):
                     padding=1,
                     norm_cfg=norm_cfg,
                     act_cfg=act_cfg,
-                    **kwargs
+                    **kwargs_
                 )
             )
             in_channels = channel_list[i]

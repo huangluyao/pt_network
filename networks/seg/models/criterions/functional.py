@@ -19,6 +19,29 @@ def cross_entropy(pred, label, weight=None, class_weight=None, reduction='mean',
 
     return  weight_reduce_loss(loss, weight=weight, reduction=reduction, avg_factor=avg_factor)
 
+def binary_cross_entropy(pred,
+                         label,
+                         weight=None,
+                         reduction='mean',
+                         avg_factor=None,
+                         class_weight=None,
+                         **kwargs
+                         ):
+
+    if pred.dim() != label.dim():
+        if pred.shape[1] != 1:
+            label, weight = expand_onehot_labels(label, pred.shape)
+        else:
+            label = label.unsqueeze(dim=1)
+
+    if weight is not None:
+        weight = weight.float()
+    loss = F.binary_cross_entropy_with_logits(
+        pred, label.float(), weight=class_weight, reduction='none')
+    loss = weight_reduce_loss(
+        loss, weight, reduction=reduction, avg_factor=avg_factor)
+
+    return loss
 
 def focal_loss_with_logits(pred, label, alpha, gamma, weight=None, reduction='mean', avg_factor=None, ignore_index=-100, **kwargs):
     if pred.dim() != label.dim():
@@ -110,7 +133,10 @@ def dice_loss(pred, target, use_log=False, smooth=1, exponent=2, class_weight=No
                 use_log=use_log,
                 valid_mask=valid_mask,
                 smooth=smooth,
-                exponent=exponent)
+                exponent=exponent,
+                reduction='none',
+                avg_factor='none'
+            )
             if class_weight is not None:
                 dice_loss *= class_weight[i]
             total_loss += dice_loss
@@ -119,17 +145,20 @@ def dice_loss(pred, target, use_log=False, smooth=1, exponent=2, class_weight=No
     return weight_reduce_loss(loss, weight=None, reduction=reduction, avg_factor=avg_factor)
 
 
-def binary_dice_loss(pred, target, valid_mask, smooth=1, exponent=2, use_log=False, **kwards):
+def binary_dice_loss(pred, target, valid_mask=None, smooth=1, exponent=2, use_log=False, reduction='mean', avg_factor=None, **kwargs):
     assert pred.shape[0] == target.shape[0]
     pred = pred.reshape(pred.shape[0], -1)
     target = target.reshape(pred.shape[0], -1)
-    valid_mask = valid_mask.reshape(valid_mask.shape[0], -1)
+    if valid_mask is not None:
+        valid_mask = valid_mask.reshape(valid_mask.shape[0], -1)
+        num = torch.sum(torch.mul(pred, target) * valid_mask, dim=1) * 2 + smooth
+    else:
+        num = torch.sum(torch.mul(pred, target), dim=1) * 2 + smooth
 
-    num = torch.sum(torch.mul(pred, target) * valid_mask, dim=1) * 2 + smooth
     den = torch.sum(pred.pow(exponent) + target.pow(exponent), dim=1) + smooth
-
     scores = num / den
-    return (1 - scores) if not use_log else -torch.log(scores.clamp_min(1e-8))
+    loss = (1 - scores) if not use_log else -torch.log(scores.clamp_min(1e-8))
+    return weight_reduce_loss(loss, weight=None, reduction=reduction, avg_factor=avg_factor)
 
 
 def noise_robust_dice_loss(pred, target, gamma=1.5, weight=None, reduction='mean', avg_factor=None, ignore_index=-100, **kwargs):
