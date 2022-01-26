@@ -23,7 +23,7 @@
     },
 
     "use_ema":false,
-    "max_epochs": 60,
+    "max_epochs": 1,
     "max_iters": null,
 
     "hook_cfgs": [
