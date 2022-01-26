@@ -1,154 +1,116 @@
+import torchvision
 import torch
 import torch.nn as nn
-from ..components import ConvModule,_BatchNorm, DepthwiseSeparableConvModule
-from ...utils import get_logger
-from ...utils import load_checkpoint
-from ..utils import constant_init, kaiming_init
+import math
+from torchvision.models.utils import load_state_dict_from_url
 from .builder import BACKBONES
-from .utils import make_divisible
-from ..components.plugins import SELayer
-from ..components.blocks import InvertedResidual
-
 
 @BACKBONES.register_module()
-class MobileNetV2(nn.Module):
+class MobileNetV2(torchvision.models.MobileNetV2):
+    model_urls = {
+        'mobilenet_v2': 'https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
+    }
 
-    arch_settings = [[1, 16, 1], [6, 24, 2], [6, 32, 3], [6, 64, 4],
-                     [6, 96, 3], [6, 160, 3], [6, 320, 1]]
-
-    def __init__(self,
-                 widen_factor=1.,
-                 strides=(1, 2, 2, 2, 1, 2, 1),
-                 dilations=(1, 1, 1, 1, 1, 1, 1),
-                 out_indices=(1, 2, 4, 6),
-                 frozen_stages=-1,
-                 conv_cfg=None,
-                 norm_cfg=dict(type='BN'),
-                 act_cfg=dict(type='ReLU6'),
-                 norm_eval=False,
-                 with_cp=False):
-        super(MobileNetV2, self).__init__()
-        self.widen_factor = widen_factor
-        self.strides = strides
-        self.dilations = dilations
-        assert len(strides) == len(dilations) == len(self.arch_settings)
-        self.out_indices = out_indices
-        for index in out_indices:
-            if index not in range(0, 7):
-                raise ValueError('the item in out_indices must in '
-                                 f'range(0, 7). But received {index}')
-
-        if frozen_stages not in range(-1, 7):
-            raise ValueError('frozen_stages must be in range(-1, 7). '
-                             f'But received {frozen_stages}')
-        self.out_indices = out_indices
-        self.frozen_stages = frozen_stages
-        self.conv_cfg = conv_cfg
-        self.norm_cfg = norm_cfg
-        self.act_cfg = act_cfg
-        self.norm_eval = norm_eval
-        self.with_cp = with_cp
-
-        self.in_channels = make_divisible(32 * widen_factor, 8)
-
-        self.conv1 = ConvModule(
-            in_channels=3,
-            out_channels=self.in_channels,
-            kernel_size=3,
-            stride=2,
-            padding=1,
-            conv_cfg=self.conv_cfg,
-            norm_cfg=self.norm_cfg,
-            act_cfg=self.act_cfg)
-
-        self.layers = []
-
-        for i, layer_cfg in enumerate(self.arch_settings):
-            expand_ratio, channel, num_blocks = layer_cfg
-            stride = self.strides[i]
-            dilation = self.dilations[i]
-            out_channels = make_divisible(channel * widen_factor, 8)
-            inverted_res_layer = self.make_layer(
-                out_channels=out_channels,
-                num_blocks=num_blocks,
-                stride=stride,
-                dilation=dilation,
-                expand_ratio=expand_ratio)
-            layer_name = f'layer{i + 1}'
-            self.add_module(layer_name, inverted_res_layer)
-            self.layers.append(layer_name)
-
-    def make_layer(self, out_channels, num_blocks, stride, dilation,
-                   expand_ratio):
-        """Stack InvertedResidual blocks to build a layer for MobileNetV2.
-
-        Args:
-            out_channels (int): out_channels of block.
-            num_blocks (int): Number of blocks.
-            stride (int): Stride of the first block.
-            dilation (int): Dilation of the first block.
-            expand_ratio (int): Expand the number of channels of the
-                hidden layer in InvertedResidual by this ratio.
-        """
-        layers = []
-        for i in range(num_blocks):
-            layers.append(
-                InvertedResidual(
-                    self.in_channels,
-                    out_channels,
-                    stride if i == 0 else 1,
-                    expand_ratio=expand_ratio,
-                    dilation=dilation if i == 0 else 1,
-                    conv_cfg=self.conv_cfg,
-                    norm_cfg=self.norm_cfg,
-                    act_cfg=self.act_cfg,
-                    with_cp=self.with_cp))
-            self.in_channels = out_channels
-
-        return nn.Sequential(*layers)
-
-    def init_weights(self, pretrained=None):
-        if isinstance(pretrained, str):
-            logger = get_logger()
-            load_checkpoint(self, pretrained, strict=False, logger=logger)
-        elif pretrained is None:
-            for m in self.modules():
-                if isinstance(m, nn.Conv2d):
-                    kaiming_init(m)
-                elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
-                    constant_init(m, 1)
+    def __init__(self,in_channels=3, out_levels=[1, 2, 3, 4, 5], out_stride=32, num_classes=None, **kwargs):
+        if num_classes is not None:
+            super(MobileNetV2, self).__init__(num_classes)
         else:
-            raise TypeError('pretrained must be a str or None')
+            super(MobileNetV2, self).__init__()
+            del self.classifier
+            if out_stride in [8, 16]:
+                self.make_dilated(out_stride)
+
+        self.num_classes = num_classes
+        self.in_channels = in_channels
+        self.out_levels = out_levels
+
+        self.features[0][0].in_channels = in_channels
+        out_channels= self.features[0][0].out_channels
+        groups = self.features[0][0].groups
+        kernel_size = self.features[0][0].kernel_size
+        self.features[0][0].weight = nn.Parameter(torch.Tensor(
+                                        out_channels, in_channels // groups, *kernel_size))
+        nn.init.kaiming_uniform_(self.features[0][0].weight, a=math.sqrt(5))
+
+        self.init_weights()
+        pass
+
+    def get_stages(self):
+        return [
+            nn.Identity(),
+            self.features[:2],
+            self.features[2:4],
+            self.features[4:7],
+            self.features[7:14],
+            self.features[14:],
+        ]
 
     def forward(self, x):
-        x = self.conv1(x)
+        stages = self.get_stages()
 
-        outs = []
-        for i, layer_name in enumerate(self.layers):
-            layer = getattr(self, layer_name)
-            x = layer(x)
-            if i in self.out_indices:
-                outs.append(x)
+        outputs = []
+        for i, stage in enumerate(stages):
+            x = stage(x)
+            if i in self.out_levels:
+                outputs.append(x)
 
-        if len(outs) == 1:
-            return outs[0]
+        if self.num_classes is not None:
+            x = nn.functional.adaptive_avg_pool2d(x, 1).reshape(x.shape[0], -1)
+            x = self.classifier(x)
+            return x
+
+        return outputs
+
+    def load_state_dict(self, state_dict, **kwargs):
+        super().load_state_dict(state_dict, **kwargs)
+
+    def init_weights(self, pretrained=None):
+        """Initialize the weights in backbone.
+
+        Parameters
+        ----------
+        pretrained : str, optional
+            Path to pre-trained weights.
+            Defaults to None.
+        """
+        state_dict = load_state_dict_from_url(self.model_urls['mobilenet_v2'])
+        model_dict = self.state_dict()
+        state_dict_v = [state_dict[k] for k in state_dict]
+        for i, k in enumerate(model_dict):
+            if model_dict[k].shape == state_dict_v[i].shape:
+                model_dict[k] = state_dict_v[i]
+        self.load_state_dict(model_dict)
+
+    def make_dilated(self, output_stride):
+
+        if output_stride == 16:
+            stage_list = [5, ]
+            dilation_list = [2, ]
+
+        elif output_stride == 8:
+            stage_list = [4, 5]
+            dilation_list = [2, 4]
+
         else:
-            return outs
+            raise ValueError("Output stride should be 16 or 8, got {}.".format(output_stride))
 
-    def _freeze_stages(self):
-        if self.frozen_stages >= 0:
-            for param in self.conv1.parameters():
-                param.requires_grad = False
-        for i in range(1, self.frozen_stages + 1):
-            layer = getattr(self, f'layer{i}')
-            layer.eval()
-            for param in layer.parameters():
-                param.requires_grad = False
+        stages = self.get_stages()
+        for stage_indx, dilation_rate in zip(stage_list, dilation_list):
+            replace_strides_with_dilation(
+                module=stages[stage_indx],
+                dilation_rate=dilation_rate,
+            )
 
-    def train(self, mode=True):
-        super(MobileNetV2, self).train(mode)
-        self._freeze_stages()
-        if mode and self.norm_eval:
-            for m in self.modules():
-                if isinstance(m, _BatchNorm):
-                    m.eval()
+
+def replace_strides_with_dilation(module, dilation_rate):
+    """Patch Conv2d modules replacing strides with dilation"""
+    for mod in module.modules():
+        if isinstance(mod, nn.Conv2d):
+            mod.stride = (1, 1)
+            mod.dilation = (dilation_rate, dilation_rate)
+            kh, kw = mod.kernel_size
+            mod.padding = ((kh // 2) * dilation_rate, (kh // 2) * dilation_rate)
+
+            # Kostyl for EfficientNet
+            if hasattr(mod, "static_padding"):
+                mod.static_padding = nn.Identity()

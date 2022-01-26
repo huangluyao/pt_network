@@ -6,7 +6,7 @@
     "task": "gan",
     "gpu_id": 0,
     "loader_cfg": {
-        "batch_size": 16,
+        "batch_size": 4,
         "num_workers": 4
     },
     "max_iters": 50000,

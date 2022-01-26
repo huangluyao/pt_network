@@ -344,13 +344,13 @@ def gauss_noise(image, gauss):
 
 def padding_resize(image, size):
     resize_h, resize_w = size
-    img_h, img_w = image.shape[:2]
+    img_h, img_w, c = image.shape
     resize_ratio = min(resize_w/ img_w, resize_h/img_h)
     new_w = round(img_w*resize_ratio)
     new_h = round(img_h*resize_ratio)
 
     img_resized = cv2.resize(image, (new_w, new_h))
-    img_padding = np.full_like(image, 0)
+    img_padding = np.full([resize_h, resize_w, c], 0).astype(image.dtype)
     img_padding[(resize_h - new_h) // 2:(resize_h - new_h) // 2 + new_h,
     (resize_w - new_w) // 2:(resize_w - new_w) // 2 + new_w, ...] = img_resized
     return img_padding

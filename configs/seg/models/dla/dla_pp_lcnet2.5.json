@@ -1,0 +1,23 @@
+{
+    "pretrained": "model_zoo/pth/backbone/pplcnet/PPLCNet_x2_5_pretrained.pth",
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "type": "PPLCNet",
+            "scale": 2.5,
+            "out_levels": [1, 2, 3, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "type": "DLAHead",
+            "in_channels": [40, 160, 320, 640, 1280],
+            "num_classes": 1,
+            "align_corners": false,
+            "dropout": 0.0,
+            "upsample_cfg": {"type": "bilinear", "scale_factor":2, "align_corners": false},
+            "norm_cfg":{"type": "BRN", "rmax_inc_step": 1000, "dmax_inc_step": 500},
+            "act_cfg": {"type": "xUnitS"},
+            "loss": [{"type": "LovaszLoss"}, {"type": "CrossEntropyLoss"}, {"type": "BoundaryLoss"}]
+        }
+    }
+}

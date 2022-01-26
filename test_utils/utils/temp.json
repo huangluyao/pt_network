@@ -1,22 +1,55 @@
 {
-  "dataset": {
-    "augmentations": {
-      "train": [
-          {"type": "Resize", "height": 640, "width": 640, "always_apply": true},
-          {"type": "RandomFlip", "prob": 0.5, "direction": "horizontal"},
-          {"type": "ColorJitter","brightness": 0.1, "contrast": 0.5, "saturation": 0.1, "hue": 0.05, "prob": 0.2},
-          {"type": "MultiplicativeNoise","multiplier":[0.9, 1.1], "prob": 0.2},
-          {"type": "Rotate", "limit": [-5,5], "prob": 0.5},
-          {"type": "GaussNoise", "var_limit":[1.0, 10.0], "mean":5, "prob": 0.2 },
-          {"type": "Normalize", "mean": [0.485,0.456,0.406], "std": [0.229,0.224,0.225], "scale": 1,"always_apply": true}
-        ],
+    "gpu_id": 0,
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0001,
+        "weight_decay": 0.0001
+    },
+    "dataset": {
+        "input_size": [640, 640],
+        "type": "DetectionDataset",
+        "use_mosaic": false,
+        "train_data_path": "E:/datasets/huangluyao/detection/cai_qie_bu_liang/train",
+        "val_data_path": "E:/datasets/huangluyao/detection/cai_qie_bu_liang/val",
+        "statistics_data": {
+            "means": [108.825, 116.744, 115.917],
+            "stds": [56.843, 55.318, 56.83]
+        }
 
-      "val": [
-          {"type": "Resize", "height": 224, "width": 224, "always_apply": true},
-          {"type": "Normalize", "mean": [0.485,0.456,0.406], "std": [0.229,0.224,0.225], "scale": 1,"always_apply": true}
-        ],
-      "no use": [
-        ]
-    }
-  }
+    },
+    "loader_cfg": {
+        "batch_size": 4,
+        "num_workers": 0
+    },
+
+    "use_ema":false,
+    "max_epochs": 60,
+    "max_iters": null,
+
+    "hook_cfgs": [
+        {
+            "type": "CosineRestartLrUpdaterHook",
+            "min_lr": 1e-6,
+            "by_epoch": true,
+            "warmup": null,
+            "warmup_iters": 0,
+            "warmup_ratio": 0.1,
+            "periods": [30, 30],
+            "restart_weights": [1, 1]
+        },
+        {
+            "type": "OptimizerHook",
+            "grad_clip": null
+        },
+        {
+            "type": "DetEvalHook",
+            "start": null,
+            "evaluation_first": false,
+            "interval": 1,
+            "vis_score_threshold": 0.3
+        },
+        {
+            "type": "IterTimerHook"
+        }
+    ]
 }

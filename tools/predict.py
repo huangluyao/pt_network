@@ -6,9 +6,22 @@ from networks.det import build_detector
 from networks.seg import build_segmentor
 from test_utils.transforms import Compose
 from test_utils.utils.checkpoint import load_checkpoint
-from test_utils.evaluator.visualizer import resize_box, resize_mask, show_detections, get_pred, get_BGR_values
+from test_utils.evaluator.eval_hooks.det_eval_hooks import resize_box, show_detections, get_BGR_values
+from test_utils.evaluator.eval_hooks.seg_eval_hooks import get_pred
 from tools.train import parse_config_file, fromfile
 from test_utils.utils.file_io import mkdir
+
+def resize_mask(mask, size):
+    resize_h, resize_w = size
+    im_h, im_w  = mask.shape
+    resize_ratio = min(resize_w / im_w, resize_h / im_h)
+    new_w = round(im_w * resize_ratio)
+    new_h = round(im_h * resize_ratio)
+    mask_resized = cv2.resize(mask, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
+    mask_padding = np.full([resize_h, resize_w], 0)
+    mask_padding[(resize_h-new_h)//2:(resize_h-new_h)//2 + new_h, (resize_w-new_w)//2:(resize_w-new_w)//2 + new_w] = mask_resized
+    return  mask_padding
+
 
 class Predict:
     def __init__(self, cfg):
@@ -19,8 +32,8 @@ class Predict:
         self.model = self.build_model(cfg)
         self._device, gpu_ids = self.get_device(gpu_id=cfg.get('gpu_id', 0))
         self.model = self.model.to(self._device)
-        self.classes_name = cfg["dataset"]["classes_name"]
-        self.input_size = cfg["dataset"]["input_size"]
+        self.classes_name = cfg["class_names"]
+        self.input_size = cfg["input_size"]
         self.model.eval()
 
     def __call__(self, src, image_path=None):
@@ -32,7 +45,7 @@ class Predict:
         input = np.transpose(image, [2, 0, 1])[None, :]
         input = torch.from_numpy(input).to(device=self._device)
         # infer
-        predict = self.model(input)
+        predict = self.model(input)["preds"]
 
         predict = predict.detach().cpu().numpy()
         result = self.get_result_img(src, predict)
@@ -60,10 +73,11 @@ class Predict:
             return vis_result
 
         if self._task == "segmentation":
-            mask = get_pred(predict)
+            result = np.transpose(predict, [0, 2, 3, 1])[0]
+            mask = get_pred(result)
             bgr_values = get_BGR_values(len(self.classes_name))
             ori_size = ori_image.shape[:2]
-            image, mask = resize_mask(image, mask, ori_size)
+            mask = resize_mask(mask, ori_size)
             vis_preds = np.zeros_like(ori_image)
             for class_id in range(1, len(self.classes_name)):
                 vis_preds[:,:,0][mask==class_id] = bgr_values[class_id-1][0]
@@ -77,6 +91,16 @@ class Predict:
 
     def build_model(self, cfg):
         model_cfg = cfg.get('model')
+        number_classes_model = {"classification": ["backbone"],
+                                "detection": ["bbox_head"],
+                                "segmentation": ["decode_head", "auxiliary_head"]
+                                }
+        num_classes_cfgs = [model_cfg.get(head_cfg, None) for head_cfg in number_classes_model.get(cfg.get("task"), [])]
+        if num_classes_cfgs:
+            for c in num_classes_cfgs:
+                if c is not None:
+                    c.update(dict(num_classes=len(cfg.class_names)))
+
         if cfg.get('task') == "classification":
             model = build_classifier(model_cfg)
         elif cfg.get('task') == "detection":
@@ -111,7 +135,7 @@ if __name__=="__main__":
     def setup():
         parser = argparse.ArgumentParser()
         parser.add_argument('-c', '--config',
-                            default="export/detection/FCOS_DSNet_CSP_PAN_DetectionDataset/2021-07-27-11-54-28/config.json",
+                            default="export/segmentation/EncoderDecoder_ResNet_DLAHead_SegDataset/2021-12-31-17-34-55/config.json",
                             type=str)
         parser.add_argument('-f', '--file', type=str, default='', help='initial weights path')
         args = parser.parse_args()
@@ -122,7 +146,7 @@ if __name__=="__main__":
     cfg, file = setup()
 
     if file == '':
-        file = "/media/hly/Samsung_T51/datasets/huangluyao/standard/under_water/test-A-image/test-A-image"
+        file = "D:\data\seg\dos_stc\\train\images"
 
     pred = Predict(cfg)
     IMAGE_FORMER = ['JPEG', 'JPG', 'JPE', 'BMP', 'PNG', 'JP2', 'PBM', 'PGM', 'PPM']
