@@ -17,6 +17,6 @@ from .mobilenetv2 import MobileNetV2
 from .swin_transformer import SwinTransformer
 from .efficientnet import EfficientNetv2_tiny
 from .pruned_smart_backbone import PrunedSmartBackbone
-# from .timm_backbone import TIMMBackbone
+from .timm_backbone import TIMMBackbone
 from .pp_lcnet import *
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

@@ -1,13 +1,11 @@
+import torch.nn as nn
 from .timm_models import create_model
-from mmcv.cnn.bricks.registry import NORM_LAYERS
-from mmcv.runner import BaseModule
-
+from ..components import NORM_LAYERS
 from .builder import BACKBONES
 
 
-
 @BACKBONES.register_module()
-class TIMMBackbone(BaseModule):
+class TIMMBackbone(nn.Module):
     """Wrapper to use backbones from timm library. More details can be found in
     `timm <https://github.com/rwightman/pytorch-image-models>`_ .
 
@@ -31,7 +29,7 @@ class TIMMBackbone(BaseModule):
         init_cfg=None,
         **kwargs,
     ):
-        super(TIMMBackbone, self).__init__(init_cfg)
+        super(TIMMBackbone, self).__init__()
         if 'norm_layer' in kwargs:
             kwargs['norm_layer'] = NORM_LAYERS.get(kwargs['norm_layer'])
         self.timm_model = create_model(
@@ -56,3 +54,12 @@ class TIMMBackbone(BaseModule):
     def forward(self, x):
         features = self.timm_model(x)
         return features
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, _BatchNorm):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
