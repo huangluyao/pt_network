@@ -163,14 +163,19 @@ class EncoderDecoder(BaseSegmentor):
                 seg_logit=seg_logit
                 )
 
-    def forward_infer(self, inputs):
+    def forward_infer(self, inputs, logits=True):
         seg_logit = self.encode_decode(inputs)
         if self.num_classes > 1:
             seg_probs = torch.softmax(seg_logit, dim=1)
         else:
             seg_probs = torch.sigmoid(seg_logit)
-        return dict(
-                preds=seg_probs,
-                seg_logit=seg_logit
-                )
+        if logits:
+            return dict(
+                    preds=seg_probs,
+                    seg_logit=seg_logit
+                    )
+        else: 
+            return dict(
+                    preds=seg_probs
+                    )
 
