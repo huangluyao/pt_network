@@ -40,39 +40,46 @@ class SegDataset():
         return len(self.images_info)
 
     def get_image_info(self, data_path, mode, **kwargs):
-        annotations_path = os.path.join(data_path, 'annotations')
-        annotation_files = os.listdir(annotations_path)
 
+
+        images_path = os.path.join(data_path, 'images')
+        image_files = os.listdir(images_path)
+        IMAGE_FORMER = ['JPEG', 'JPG', 'JPE', 'BMP', 'PNG', 'JP2', 'PBM', 'PGM', 'PPM']
         image_infos = list()
 
-        # parser annotations
-        for annotation_file in annotation_files:
-            annotation_file_path = os.path.join(annotations_path, annotation_file)
+        for image_file in image_files:
+            image_name, suffix = image_file.split('.')
 
-            if annotation_file_path.endswith('.json'):
-                with open(annotation_file_path) as f:
-                    info = json.load(f)
-                labels_info = info.get('shapes', None)
+            if suffix.upper() in IMAGE_FORMER:
 
-                label_points = []
-                label_names = []
+                image_file_path = os.path.join(images_path, image_file)
+                annotation_file_path = os.path.join(images_path.replace('images', 'annotations'), image_name+'.json')
 
-                for label_info in labels_info:
-                    label_name = label_info.get('label', None)
-                    if not label_name:
-                        continue
-                    points = np.array(label_info['points'])
-                    if label_name not in self.class_names:
-                        self.class_names.append(label_name)
+                if os.path.exists(annotation_file_path) and os.path.exists(image_file_path):
+                    with open(annotation_file_path) as f:
+                        info = json.load(f)
+                        labels_info = info.get('shapes', None)
 
-                    label_points.append(points)
-                    label_names.append(self.class_names.index(label_name))
 
-                image_info = dict(image_path=annotation_file_path.replace('annotations', 'images').replace('json', 'jpg'),
-                                  label_points=label_points,
-                                  label_index=np.array(label_names)
-                                  )
-                image_infos.append(image_info)
+                    label_points = []
+                    label_names = []
+
+                    for label_info in labels_info:
+                        label_name = label_info.get('label', None)
+                        if not label_name:
+                            continue
+                        points = np.array(label_info['points'])
+                        if label_name not in self.class_names:
+                            self.class_names.append(label_name)
+
+                        label_points.append(points)
+                        label_names.append(self.class_names.index(label_name))
+
+                    image_info = dict(image_path=image_file_path,
+                                      label_points=label_points,
+                                      label_index=np.array(label_names)
+                                      )
+                    image_infos.append(image_info)
 
         return image_infos
 
