@@ -68,7 +68,7 @@ class SegDataset():
                     label_points.append(points)
                     label_names.append(self.class_names.index(label_name))
 
-                image_info = dict(image_path=annotation_file_path.replace('annotations', 'images').replace('json', 'png'),
+                image_info = dict(image_path=annotation_file_path.replace('annotations', 'images').replace('json', 'jpg'),
                                   label_points=label_points,
                                   label_index=np.array(label_names)
                                   )

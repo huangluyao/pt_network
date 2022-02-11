@@ -51,7 +51,7 @@ class BaseSegmentor(nn.Module):
         """Placeholder for Forward function for training."""
         pass
 
-    def forward(self, inputs, return_metrics=False, **kwargs):
+    def forward(self, inputs, return_metrics=False, logits=True, **kwargs):
         """Calls either :func:`forward_train` or :func:`forward_infer` depending
         on whether ``return_metrics`` is ``True``.
         """
@@ -59,7 +59,7 @@ class BaseSegmentor(nn.Module):
             metrics = self.forward_train(inputs, **kwargs)
             return self._parse_metrics(metrics)
         else:
-            return self.forward_infer(inputs, **kwargs)
+            return self.forward_infer(inputs, logits, **kwargs)
 
     def init_weights(self, pretrained=None):
         """Initialize the weights in segmentor.

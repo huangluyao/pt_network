@@ -9,7 +9,7 @@ from ..builder import OPTIMIZER
 __all__ = ('RAdam',)
 
 
-@OPTIMIZER.register_module()
+@OPTIMIZER.register_module(force=True)
 class RAdam(Optimizer):
     r"""Implements RAdam optimization algorithm.
     Note:

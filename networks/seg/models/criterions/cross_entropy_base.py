@@ -5,11 +5,12 @@ from ..builder import LOSSES
 @LOSSES.register_module()
 class CrossEntropyLoss(BaseLoss):
 
-    def __init__(self, class_weight=None, ignore_label=-100, use_sigmoid=False, **kwargs):
+    def __init__(self, class_weight=None, ignore_label=-100, use_sigmoid=False, label_smoothing=0.0, **kwargs):
         super(CrossEntropyLoss, self).__init__(loss_name='loss_ce', **kwargs)
         self.class_weight = class_weight
         self.ignore_label = ignore_label
         self.use_sigmoid = use_sigmoid
+        self.label_smoothing = label_smoothing
 
         if use_sigmoid:
             self.cls_criterion = binary_cross_entropy
@@ -36,14 +37,25 @@ class CrossEntropyLoss(BaseLoss):
         if ignore_label is None:
             ignore_label = self.ignore_label
 
-        loss_cls = self.loss_weight * self.cls_criterion(
-            pred,
-            target,
-            weight=weight,
-            class_weight=class_weight,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            ignore_index=ignore_label)
+        if self.use_sigmoid:
+            loss_cls = self.loss_weight * self.cls_criterion(
+                pred,
+                target,
+                weight=weight,
+                class_weight=class_weight,
+                reduction=reduction,
+                avg_factor=avg_factor,
+                ignore_index=ignore_label)
+        else:
+            loss_cls = self.loss_weight * self.cls_criterion(
+                pred,
+                target,
+                weight=weight,
+                class_weight=class_weight,
+                reduction=reduction,
+                avg_factor=avg_factor,
+                ignore_index=ignore_label,
+                label_smoothing=self.label_smoothing)
 
         return loss_cls
 
@@ -74,7 +86,6 @@ class FocalLoss(BaseLoss):
 
         if ignore_label is None:
             ignore_label = self.ignore_label
-
         loss_cls = self.loss_weight * self.criterion(
             pred,
             target,

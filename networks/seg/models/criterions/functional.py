@@ -4,7 +4,7 @@ from scipy.ndimage.morphology import distance_transform_edt
 from .utils import *
 
 # ---------------------------------------- CrossEntropy base------------------------------------------
-def cross_entropy(pred, label, weight=None, class_weight=None, reduction='mean', avg_factor=None, ignore_index=-100, **kwargs):
+def cross_entropy(pred, label, weight=None, class_weight=None, reduction='mean', avg_factor=None, ignore_index=-100, label_smoothing=0.0, **kwargs):
     if ignore_index is None:
         ignore_index = -100
     loss = F.cross_entropy(
@@ -12,7 +12,8 @@ def cross_entropy(pred, label, weight=None, class_weight=None, reduction='mean',
         label.long(),
         weight=class_weight,
         reduction='none',
-        ignore_index=ignore_index)
+        ignore_index=ignore_index,
+        label_smoothing=label_smoothing)
 
     if weight is not None:
         weight = weight.float()
