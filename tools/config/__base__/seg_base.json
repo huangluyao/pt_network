@@ -6,15 +6,18 @@
         "weight_decay": 0.0001
     },
     "dataset": {
-        "input_size": [256, 256],
+        "input_size": [
+            512,
+            512
+        ],
         "type": "SegDataset",
         "use_mosaic": false,
-        "train_data_path": "D:\\data\\seg\\dos_stc/train",
-        "val_data_path": "D:\\data\\seg\\dos_stc/val"
+        "train_data_path": "/zhubin/psline/train",
+        "val_data_path": "/zhubin/psline/val"
     },
     "loader_cfg": {
-        "batch_size": 4,
-        "num_workers": 4
+        "batch_size": 24,
+        "num_workers": 24
     },
 
     "use_ema":false,
@@ -47,8 +50,8 @@
         },
         {
             "type": "ExportOnnxHook",
-            "input_name":"input_image",
-            "output_name":"output_names"
+            "input_name": "input_image",
+            "output_name": "output_names"
         }
     ]
 }
