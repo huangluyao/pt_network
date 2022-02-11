@@ -32,7 +32,7 @@ class ExportOnnxHook(Hook):
 
         input_size = runner.cfg.input_size
         fake_data = torch.randn([1, 3]+input_size, device="cpu")
-        torch.onnx.export(model, (fake_data , False, False), self.output_file,
+        torch.onnx.export(model, (fake_data), self.output_file,
                           input_names=[self.input_name],
                           output_names=[self.output_name],
                           dynamic_axes=self.dynamic_axes,

@@ -170,12 +170,16 @@ class EncoderDecoder(BaseSegmentor):
         else:
             seg_probs = torch.sigmoid(seg_logit)
         if logits:
-            return dict(
-                    preds=seg_probs,
-                    seg_logit=seg_logit
-                    )
+            if torch.onnx.is_in_onnx_export():
+                return seg_probs
+            else:
+                return dict(
+                        preds=seg_probs,
+                        seg_logit=seg_logit
+                        )
         else: 
             return dict(
                     preds=seg_probs
                     )
+
 
