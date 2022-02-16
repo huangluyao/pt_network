@@ -5,7 +5,7 @@ import os.path
 import cv2
 import torch
 import numpy as np
-
+import random
 
 
 def get_host_info():
@@ -118,7 +118,13 @@ class BatchSampler:
                 batch = []
 
         if len(batch) > 0 and not self.drop_last:
-            yield batch
+            choice_index = []
+            if len(batch) < self.batch_size:
+                number_choice = self.batch_size - len(batch)
+                choice_index = random.sample(self.sampler, number_choice)
+
+            yield batch + choice_index
+
 
     def __len__(self):
         if self.drop_last:
