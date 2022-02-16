@@ -1,0 +1,30 @@
+{
+    "_base_": "../../../_base_/models/uper/uper.json",
+    "model": {
+        "type": "EncoderDecoder",
+        "backbone": {
+            "type": "MobileNetV2",
+            "out_levels": [3, 4, 5],
+            "num_classes": null
+        },
+        "decode_head": {
+            "in_channels": [32, 96, 1280]
+        },
+        "auxiliary_head": [
+            {
+                "type": "FCNHead",
+                "in_channels":1280,
+                "num_convs": 1,
+                "head_width": 128,
+                "in_index": -1,
+                "num_classes": 1,
+                "loss":  [{"type": "LovaszLoss", "loss_weight": 0.4}, {"type": "CrossEntropyLoss", "loss_weight": 0.4}]
+            }],
+        "siamese_layer": {
+            "type": "PixelSub",
+            "fea_list": [192, 384, 768],
+            "in_c": 192,
+            "ou_c": 1
+        }
+    }
+}

@@ -25,7 +25,8 @@ class EncoderDecoder(BaseSegmentor):
                  auxiliary_head=None,
                  train_cfg=None,
                  test_cfg=None,
-                 pretrained=None):
+                 pretrained=None,
+                 **kwargs):
         super(EncoderDecoder, self).__init__()
         self.backbone = builder.build_backbone(backbone)
         if neck is not None:
@@ -114,10 +115,10 @@ class EncoderDecoder(BaseSegmentor):
         losses = dict()
         if isinstance(self.auxiliary_head, nn.ModuleList):
             for idx, aux_head in enumerate(self.auxiliary_head):
-                loss_aux = aux_head.forward_train(x, ground_truth)
+                loss_aux, _ = aux_head.forward_train(x, ground_truth)
                 losses.update(add_prefix(loss_aux, f'aux_{idx}'))
         else:
-            loss_aux = self.auxiliary_head.forward_train(
+            loss_aux, _ = self.auxiliary_head.forward_train(
                 x, ground_truth)
             losses.update(add_prefix(loss_aux, 'aux'))
 
@@ -148,7 +149,7 @@ class EncoderDecoder(BaseSegmentor):
         losses.update(loss_decode)
 
         if self.with_auxiliary_head:
-            loss_aux = self._auxiliary_head_forward_train(
+            loss_aux  = self._auxiliary_head_forward_train(
                 x, gt_masks)
             losses.update(loss_aux)
 

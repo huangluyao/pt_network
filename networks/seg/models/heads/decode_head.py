@@ -206,7 +206,13 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
         """
         seg_logits = self.forward(inputs)
         losses = self.losses(seg_logits, gt_semantic_seg)
-        return losses
+
+        if isinstance(seg_logits, list):
+            logits = seg_logits[-1]
+        else:
+            logits = seg_logits
+
+        return losses, logits
 
     def forward_infer(self, inputs, **kwargs):
         """Forward function for testing.
