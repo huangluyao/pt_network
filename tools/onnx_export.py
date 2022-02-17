@@ -2,7 +2,6 @@ import os
 from pprint import pprint
 from pyexpat import model
 from re import S
-import resource
 import torch, cv2
 import numpy as np
 from networks.cls import build_classifier
@@ -63,9 +62,9 @@ class Exporter:
         input = np.transpose(image, [2, 0, 1])[None, :]
         input = torch.from_numpy(input)
         # input = torch.randn(1, 3, 512, 512)
-        fake_data = torch.randn(1, 3, 512, 512, device="cpu")
+        fake_data = torch.randn(1, 3, self.input_size[1], self.input_size[0], device="cpu")
         self.model(fake_data, logits=False)
-        torch.onnx.export(self.model, (fake_data, False, False,), output_path,
+        torch.onnx.export(self.model, (fake_data), output_path,
             input_names=["input_image"], output_names=["output_names"] , opset_version=opset
             # ,dynamic_axes={"input_image":{0: "batch_size"}, "output_names":{0: "batch_size"},}
         )
@@ -165,7 +164,7 @@ if __name__=="__main__":
     def setup():
         parser = argparse.ArgumentParser()
         parser.add_argument('-c', '--config',
-                            default="export/segmentation/EncoderDecoder_ResNet_DLAHead_SegDataset/2021-12-31-17-34-55/config.json",
+                            default="export/gan/TwoStageInpaintor_None_ImageInpaintingDataset/2021-12-30-11-39-48/config.json",
                             type=str)
         parser.add_argument('-f', '--file', type=str, default='', help='input_image')
         parser.add_argument('--opset', type=int, default=12, help='onnx opset version')
@@ -178,7 +177,7 @@ if __name__=="__main__":
     cfg, file, opset, output_path = setup()
 
     if file == '':
-        file = "D:\data\seg\dos_stc\\train\images"
+        file = "D:\data\seg\dos_stc\\val\images\\20210925173114031_1_8_4.png"
 
     pred = Exporter(cfg)
     # IMAGE_FORMER = ['JPEG', 'JPG', 'JPE', 'BMP', 'PNG', 'JP2', 'PBM', 'PGM', 'PPM']
